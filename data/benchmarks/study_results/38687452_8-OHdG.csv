@@ -1,0 +1,8 @@
+first_author,year,full_reference,SMD,CI_lower,CI_upper,weight_percent
+Allen,2009,Allen J et al. (2009) Effect of diesel exhaust inhalation on antioxidant and oxidative stress responses in adults with metabolic syndrome. Inhal Toxicol 21(13):1061-1067,0.06,-0.82,0.94,16.38
+Liu(1),2015,"Liu L et al. (2015) Effects of ambient coarse, fine, and ultrafine particles and their biological constituents on systemic biomarkers: a controlled human exposure study. Environ Health Perspect 123(6):534-540",-1.49,-1.94,-1.05,16.81
+Liu(2),2015,"Liu L et al. (2015) Effects of ambient coarse, fine, and ultrafine particles and their biological constituents on systemic biomarkers: a controlled human exposure study. Environ Health Perspect 123(6):534-540",-1.29,-1.81,-0.77,16.75
+Shao,2017,Shao D et al. (2017) Cardiorespiratory responses of air filtration: A randomized crossover intervention trial in seniors living in Beijing. Sci Total Environ 603-604:541-549,0.44,-0.29,1.16,16.56
+Chuang,2017,Chuang HC et al. (2017) Long-term indoor air conditioner filtration and cardiovascular health: A randomized crossover intervention study. Environ Int 106:91-96,-5.53,-5.96,-5.10,16.82
+Guo,2021,"Guo M et al. (2021) Reducing particulates in indoor air can improve the circulation and cardiorespiratory health of old people: A randomized, double-blind crossover trial of air filtration. Sci Total Environ 798:149248",-0.63,-1.21,-0.05,16.70
+Overall pooled effect,,"",-1.42,-3.33,0.49,100.00

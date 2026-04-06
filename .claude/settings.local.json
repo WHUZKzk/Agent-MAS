@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls /mnt/)",
+      "Read(//d//**)",
+      "Bash(cmd //c \"dir D:\\\\Agent-MAS\")",
+      "Bash(python -c \"import pydantic; print\\(pydantic.__version__\\)\")",
+      "Bash(python -c \"import yaml; print\\('pyyaml ok'\\)\")",
+      "Bash(python -c \"import openai; print\\('openai ok'\\)\")",
+      "Bash(python:*)",
+      "Bash(pytest tests/test_dag.py -v)",
+      "Bash(pytest:*)",
+      "Bash(wc -l /d/Agent-MAS/data/benchmarks/study_results/*.csv)",
+      "Bash(wc:*)",
+      "Bash(pip install:*)",
+      "Bash(/d/anaconda3/Scripts/pip install:*)"
+    ]
+  }
+}

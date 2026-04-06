@@ -1,0 +1,12 @@
+Study / Subgroup,Full Title,Exp Events,Exp Total,Ctrl Events,Ctrl Total,Weight %,Odds Ratio,95% CI
+Lu 2019,"Effects of a nurse-led, stage-matched, tailored program for smoking cessation in health education centers...",24,107,9,90,0.068,2.6,"[1.14, 5.94]"
+Pardavila-Belio 2015,Intervention study for smoking cessation in Spanish college students: pragmatic randomized controlled trial,30,133,10,122,0.075,3.26,"[1.52, 7.00]"
+Reid 2019,Automated telephone follow-up for smoking cessation in smokers with coronary heart disease...,84,200,76,210,0.123,1.28,"[0.86, 1.90]"
+Rossem 2017,Effectiveness of intensive practice nurse counselling versus brief general practitioner advice...,48,149,57,146,0.111,0.74,"[0.46, 1.20]"
+Smith 2011,Nurse case-managed tobacco cessation interventions for general hospital patients...,103,301,98,315,0.133,1.15,"[0.82, 1.61]"
+Tønnesen 2006,Nurse-conducted smoking cessation in patients with COPD using nicotine sublingual tablets and behavioral support,35,187,26,183,0.1,1.39,"[0.80, 2.42]"
+Wewers 2009,"Effectiveness of a nurse-managed, lay-led tobacco cessation intervention among Ohio Appalachian women",32,147,8,155,0.07,5.11,"[2.27, 11.52]"
+William 2018,Helping cancer patients quit smoking using brief advice based on risk communication...,42,268,43,260,0.113,0.94,"[0.59, 1.49]"
+William 2020,Effectiveness of a brief self-determination theory-based smoking cessation intervention for smokers...,96,787,73,784,0.135,1.35,"[0.98, 1.87]"
+Young 2008,Acceptability and effectiveness of opportunistic referral of smokers to telephone cessation advice...,15,169,12,149,0.072,1.11,"[0.50, 2.46]"
+Total (95% CI),-,509,2448,412,2414,1,1.43,"[1.08, 1.90]"

@@ -1,0 +1,6 @@
+First Author,Year,Title,Outcome,Probiotic Group Events,Probiotic Group Total,Control Events,Control Total,Weight (%),OR,95% CI Lower,95% CI Upper
+Andresen et al.,2020,Heat-inactivated Bifidobacterium bifidum MIMBb75 (SYN-HI-001) in the treatment of irritable bowel syndrome: A multicentre randomised double-blind placebo-controlled clinical trial,FDA-defined global improvement (responder analysis),74,221,43,222,45.6%,2.10,1.36,3.24
+Kwon et al.,2024,Effect of Lacticaseibacillus rhamnosus IDCC3201 on irritable bowel syndrome with constipation: A randomized double-blind and placebo-controlled trial,FDA-defined global improvement (responder analysis),10,15,6,15,3.2%,3.00,0.68,13.31
+Spiller et al.,2015,Randomized double blind placebo-controlled trial of Saccharomyces cerevisiae CNCM I-3856 in irritable bowel syndrome: Improvement in abdominal pain and bloating in those with predominant constipation,FDA-defined global improvement (responder analysis),57,177,47,175,51.2%,1.29,0.82,2.05
+Total (95% CI),,,FDA-defined global improvement (responder analysis),,413,,412,100%,1.71,1.26,2.33
+Total events,,,,141,"",96,"",,,

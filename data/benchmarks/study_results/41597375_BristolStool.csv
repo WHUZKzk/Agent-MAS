@@ -1,0 +1,6 @@
+First Author,Year,Title,Outcome,Experimental Events,Experimental Total,Control Events,Control Total,Weight (%),OR,95% CI Lower,95% CI Upper
+Martoni et al.,2023,Efficacy and dose response of Lactiplantibacillus plantarum in diarrhea-predominant irritable bowel syndrome,Stool type classification (Bristol Stool Scale),87,99,27,104,42.5%,20.68,9.81,43.59
+Shanshal et al.,2023,Two Lactobacilli strains as adjuvant therapy in the management of irritable bowel syndrome: A randomized control trial,Stool type classification (Bristol Stool Scale),42,50,0,50,19.9%,505.00,28.31,9007.00
+Shin et al.,2018,A double blind placebo-controlled randomized clinical trial that breast milk derived-Lactobacillus gasseri BNR17 mitigated diarrhea-dominant irritable bowel syndrome,Stool type classification (Bristol Stool Scale),16,24,7,27,37.6%,5.71,1.71,19.14
+Total (95% CI),,,Stool type classification (Bristol Stool Scale),,173,,181,100%,24.11,4.39,132.35
+Total events,,,,,145,,34,,,

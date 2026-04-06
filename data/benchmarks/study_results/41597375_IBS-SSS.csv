@@ -1,0 +1,5 @@
+First Author,Year,Title,Outcome,Probiotic Group Mean,Probiotic Group SD,Probiotic Group Total,Placebo Mean,Placebo SD,Placebo Total,Weight (%),MD,95% CI Lower,95% CI Upper
+Dapoigny et al.,2012,Efficacy and safety profile of LCR35 complete freeze-dried culture in irritable bowel syndrome: A randomized double-blind study,IBS-Severity Scoring System (IBS-SSS),-22,99.9,3,-101.8,96.2,4,6.3%,79.80,-67.40,227.00
+Martoni et al.,2023,Efficacy and dose response of Lactiplantibacillus plantarum in diarrhea-predominant irritable bowel syndrome,IBS-Severity Scoring System (IBS-SSS),-156.77,99.06,99,-58.82,74.75,104,46.8%,-97.95,-122.18,-73.72
+Srivastava et al.,2024,A randomized double-blind placebo-controlled trial to evaluate the safety and efficacy of live Bifidobacterium longum CECT 7347 (ES1) and heat-treated Bifidobacterium longum CECT 7347 (HT-ES1) in participants with diarrhea-predominant irritable bowel syndrome,IBS-Severity Scoring System (IBS-SSS),-173.7,75.6,65,-60.44,65.5,67,46.9%,-113.26,-137.42,-89.10
+Total (95% CI),,,IBS-Severity Scoring System (IBS-SSS),,,167,,,175,100%,-93.92,-133.11,-54.73

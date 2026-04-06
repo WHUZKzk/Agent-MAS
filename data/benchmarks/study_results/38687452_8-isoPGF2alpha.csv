@@ -1,0 +1,8 @@
+first_author,year,full_reference,SMD,CI_lower,CI_upper,weight_percent
+Allen(1),2009,Allen J et al. (2009) Effect of diesel exhaust inhalation on antioxidant and oxidative stress responses in adults with metabolic syndrome. Inhal Toxicol 21(13):1061-1067,0.00,-0.88,0.88,12.90
+Allen(2),2011,Allen RW et al. (2011) An air filter intervention study of endothelial function among healthy adults in a woodsmoke-impacted community. Am J Respir Crit Care Med 183(9):1222-1230,0.16,-0.25,0.57,20.30
+Riddervold(1),2012,Riddervold IS et al. (2012) Effects of wood smoke particles from wood-burning stoves on the respiratory health of atopic humans. Part Fibre Toxicol 9:12,-0.65,-1.43,0.13,14.33
+Riddervold(2),2012,Riddervold IS et al. (2012) Effects of wood smoke particles from wood-burning stoves on the respiratory health of atopic humans. Part Fibre Toxicol 9:12,1.63,0.76,2.50,12.98
+Zhao,2020,Zhao Y et al. (2020) Cardiorespiratory responses to fine particles during ambient PM(2.5) pollution waves: Findings from a randomized crossover trial in young healthy adults. Environ Int 139:105590,0.08,-0.43,0.60,18.62
+Wang,2021,Wang Y et al. (2021) Effects of air purification of indoor PM(2.5) on the cardiorespiratory biomarkers in young healthy adults. Indoor Air 31(4):1125-1133,-0.28,-0.65,0.10,20.86
+Overall pooled effect,,"",0.11,-0.35,0.57,100.00

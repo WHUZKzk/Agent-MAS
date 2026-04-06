@@ -1,0 +1,6 @@
+First Author,Year,Title,Experimental Total,Experimental Mean,Experimental SD,Control Total,Control Mean,Control SD,SMD,95% CI Lower,95% CI Upper,Weight (%)
+Thorand et al.,1998,Intake of Fruits Vegetables Folic Acid and Related Nutrients and Risk of Breast Cancer in Postmenopausal Women,43,328.00,393.3300,106,278.00,359.2500,0.13,-0.22,0.49,4.4%
+Tjønneland et al.,2005,Folate Intake Alcohol and Risk of Breast Cancer Among Postmenopausal Women in Denmark,388,333.50,92.3700,368,323.00,94.6800,0.11,-0.03,0.25,28.1%
+Ulrika et al.,2007,High Folate Intake Is Associated With Lower Breast Cancer Incidence in Postmenopausal Women in the Malmö Diet and Cancer Cohort,392,292.00,286.0000,11307,287.00,318.0000,0.02,-0.08,0.12,54.9%
+Kim et al.,2019,Folic Acid Supplement Use and Breast Cancer Risk in BRCA1 and BRCA2 Mutation Carriers: A Case-Control Study,129,92.50,147.9000,271,115.70,180.6000,-0.14,-0.35,0.07,12.6%
+Common effect model,,,952,,,12072,,,0.03,-0.05,0.10,100%

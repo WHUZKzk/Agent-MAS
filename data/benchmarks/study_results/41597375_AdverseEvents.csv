@@ -1,0 +1,8 @@
+First Author,Year,Title,Outcome,Probiotic Events,Probiotic Total,Placebo Events,Placebo Total,Weight (%),OR,95% CI Lower,95% CI Upper
+Andresen et al.,2020,Heat-inactivated Bifidobacterium bifidum MIMBb75 (SYN-HI-001) in the treatment of irritable bowel syndrome: A multicentre randomised double-blind placebo-controlled clinical trial,Adverse events,7,221,8,222,9.8%,0.88,0.31,2.46
+Gayathri et al.,2020,Efficacy of Saccharomyces cerevisiae CNCM I-3856 as an add-on therapy for irritable bowel syndrome,Adverse events,7,6,3,5,Not estimable,Not estimable,Not estimable,Not estimable
+Mack et al.,2022,A Nonviable Probiotic in Irritable Bowel Syndrome: A Randomized Double-Blind Placebo-Controlled Multicenter Study,Adverse events,89,187,108,197,69.7%,0.75,0.50,1.12
+Martoni et al.,2023,Efficacy and dose response of Lactiplantibacillus plantarum in diarrhea-predominant irritable bowel syndrome,Adverse events,5,99,12,104,14.1%,0.41,0.14,1.20
+Srivastava et al.,2024,A randomized double-blind placebo-controlled trial to evaluate the safety and efficacy of live Bifidobacterium longum CECT 7347 (ES1) and heat-treated Bifidobacterium longum CECT 7347 (HT-ES1) in participants with diarrhea-predominant irritable bowel syndrome,Adverse events,9,65,6,67,6.4%,0.55,4.88
+Total (95% CI),,,Adverse events,,578,,595,100%,0.77,0.55,1.07
+Total events,,,,117,"",137,"",,,

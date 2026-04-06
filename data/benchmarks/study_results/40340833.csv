@@ -1,0 +1,5 @@
+Study / Subgroup,Full Title,Experimental (Mean),Experimental (SD),Experimental (Total),Control (Mean),Control (SD),Control (Total),Weight %,Mean Difference,95% CI
+Lyons 2017 ,Feasibility and acceptability of a wearable technology physical activity intervention with telephone counseling for mid-aged and older adults: a randomized controlled pilot trial ,1088.92,175.56,20,1149.44,147.69,20,0.154,-60.52,"[-161.07, 40.03] "
+Mackey 2019 ,"Men on the move: a randomized controlled feasibility trial of a scalable, choice-based, physical activity and active transportation intervention for older men ",548.9,72.2,28,596.8,135.5,25,0.44,-47.9,"[-107.37, 11.57] "
+Rosenberg 2020 ,Reducing sitting time in obese older adults: the I-STAND randomized controlled trial ,528,137,29,600,104,31,0.406,-72,"[-133.86, -10.14] "
+Total (95% CI),,-,-,77,-,-,76,1,-59.64,"[-99.07, -20.20] "

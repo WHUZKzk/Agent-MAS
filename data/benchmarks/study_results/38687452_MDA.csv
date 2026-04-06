@@ -1,0 +1,7 @@
+first_author,year,full_reference,SMD,CI_lower,CI_upper,weight_percent
+Allen,2011,Allen RW et al. (2011) An air filter intervention study of endothelial function among healthy adults in a woodsmoke-impacted community. Am J Respir Crit Care Med 183(9):1222-1230,-0.01,-0.42,0.40,20.41
+Liu(1),2015,"Liu L et al. (2015) Effects of ambient coarse, fine, and ultrafine particles and their biological constituents on systemic biomarkers: a controlled human exposure study. Environ Health Perspect 123(6):534-540",-0.22,-0.62,0.17,20.56
+Liu(2),2015,"Liu L et al. (2015) Effects of ambient coarse, fine, and ultrafine particles and their biological constituents on systemic biomarkers: a controlled human exposure study. Environ Health Perspect 123(6):534-540",-2.24,-2.84,-1.64,18.78
+Zhao,2020,Zhao Y et al. (2020) Cardiorespiratory responses to fine particles during ambient PM(2.5) pollution waves: Findings from a randomized crossover trial in young healthy adults. Environ Int 139:105590,0.07,-0.44,0.59,19.57
+Wang,2021,Wang Y et al. (2021) Effects of air purification of indoor PM(2.5) on the cardiorespiratory biomarkers in young healthy adults. Indoor Air 31(4):1125-1133,-0.10,-0.47,0.28,20.68
+Overall pooled effect,,"",-0.47,-1.14,0.20,100.00

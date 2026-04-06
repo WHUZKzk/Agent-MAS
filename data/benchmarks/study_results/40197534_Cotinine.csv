@@ -1,0 +1,6 @@
+Study / Subgroup,Full Title,Exp Events,Exp Total,Ctrl Events,Ctrl Total,Weight %,Odds Ratio,95% CI
+Pardavila-Belio 2015,Intervention study for smoking cessation in Spanish college students: pragmatic randomized controlled trial,28,133,8,122,0.246,3.8,"[1.16, 8.71]"
+Pbert 2011,Effectiveness of a school nurse-delivered smoking-cessation intervention for adolescents,25,486,22,582,0.27,1.38,"[0.77, 2.48]"
+Snaterse 2019,Smoking cessation after nurse-coordinated referral to a comprehensive lifestyle programme...,62,86,65,76,0.25,0.44,"[0.20, 0.97]"
+Wewers 2009,"Effectiveness of a nurse-managed, lay-led tobacco cessation intervention among Ohio Appalachian women",21,147,6,155,0.234,4.14,"[1.62, 10.57]"
+Total (95% CI),-,136,852,101,935,1,1.72,"[0.66, 4.51]"

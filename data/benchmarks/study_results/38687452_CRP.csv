@@ -1,0 +1,10 @@
+first_author,year,full_reference,SMD,CI_lower,CI_upper,weight_percent
+Tornqvist,2007,Tornqvist H et al. (2007) Persistent endothelial dysfunction in humans after diesel exhaust inhalation. Am J Respir Crit Care Med 176(4):395-400,-0.22,-0.94,0.50,11.90
+Brauner,2007,Brauner EV et al. (2008) Indoor particles affect vascular function in the aged: an air filtration-based intervention study. Am J Respir Crit Care Med 177(4):419-425,0.57,0.12,1.01,12.66
+Allen,2011,Allen RW et al. (2011) An air filter intervention study of endothelial function among healthy adults in a woodsmoke-impacted community. Am J Respir Crit Care Med 183(9):1222-1230,-0.29,-0.70,0.13,12.72
+Kajbafzadeh,2015,Kajbafzadeh M et al. (2015) The impacts of traffic related and woodsmoke particulate matter on measures of cardiovascular health: a HEPA filter intervention study. Occup Environ Med 72(6):394-400,-0.06,-0.39,0.28,12.87
+Chen,2015,"Chen R et al. (2015) Cardiopulmonary benefits of reducing indoor particles of outdoor origin: a randomized, double-blind crossover trial of air purifiers. J Am Coll Cardiol 65(21):2279-2287",-0.01,-0.48,0.46,12.60
+Shao,2017,Shao D et al. (2017) Cardiorespiratory responses of air filtration: A randomized crossover intervention trial in seniors living in Beijing. Sci Total Environ 603-604:541-549,0.16,-0.55,0.88,11.90
+Chuang,2017,Chuang HC et al. (2017) Long-term indoor air conditioner filtration and cardiovascular health: A randomized crossover intervention study. Environ Int 106:91-96,-2.11,-2.35,-1.86,13.01
+Guo,2021,"Guo M et al. (2021) Reducing particulates in indoor air can improve the circulation and cardiorespiratory health of old people: A randomized, double-blind crossover trial of air filtration. Sci Total Environ 798:149248",-0.53,-1.11,0.05,12.33
+Overall pooled effect,,"",-0.32,-1.12,0.48,100.00

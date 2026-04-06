@@ -1,0 +1,4 @@
+First Author,Year,Title,Outcome,Probiotic Mean,Probiotic SD,Probiotic Total,Placebo Mean,Placebo SD,Placebo Total,Weight (%),MD,95% CI Lower,95% CI Upper
+Martoni et al.,2023,Efficacy and dose response of Lactiplantibacillus plantarum in diarrhea-predominant irritable bowel syndrome,Quality of Life (QoL),28.78,23.64,99,4.9,14.3,104,56.1%,23.88,18.47,29.29
+Srivastava et al.,2024,A randomized double-blind placebo-controlled trial to evaluate the safety and efficacy of live Bifidobacterium longum CECT 7347 (ES1) and heat-treated Bifidobacterium longum CECT 7347 (HT-ES1) in participants with diarrhea-predominant irritable bowel syndrome,Quality of Life (QoL),19.5,19.52,65,-5.74,16.07,67,43.9%,25.24,19.13,31.35
+Total (95% CI),,,Quality of Life (QoL),,,164,,,171,100%,24.48,20.43,28.53

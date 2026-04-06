@@ -1,0 +1,11 @@
+First Author,Year,Title,Study Type,No. of Surgical Depts,No. of Orthopaedic Surgeries,p-value
+Friberg et al,2001,"Surgical area contamination — comparable bacterial counts using disposable head and mask and helmet aspirator system, but dramatic increase upon omission of headgear: an experimental study in horizontal laminar air-flow",Comparative study,5,30,<0.001
+Kakwani et al,2007,The effect of laminar air-flow on the results of Austin-Moore hemiarthroplasty,Consecutive cohort study,88,435,<0.001
+Brandt et al,2008,Operating room ventilation with laminar airflow shows no protective effect on the surgical site infection rate in orthopedic and abdominal surgery,Retrospective cohort study,44,"99,230",<0.001
+Nilson et al,2010,Assessment of horizontal laminar air flow instrument table for additional ultraclean space during surgery,Comparative study,22,8550,<0.001
+Sossai et al,2011,Mobile laminar air flow screen for additional operating room ventilation: reduction of intraoperative bacterial contamination during total knee arthroplasty,Comparative study,2,17,<0.05
+Hooper et al,2011,Does the use of laminar flow and space suits reduce early deep infection after total hip and knee replacement?: The ten-year results of the New Zealand Joint Registry,Retrospective study,50,"36,826",<0.001
+Bosanquet et al,2013,Laminar flow reduces cases of surgical site infections in vascular patients,Retrospective study,45,170,<0.05
+Pinder et al,2016,Does laminar flow ventilation reduce the rate of infection? An observational study of trauma in England,Observational study,19,"803,065",<0.05
+Wang et al,2020,Association of laminar airflow during primary total joint arthroplasty with periprosthetic joint infection,Original cohort investigation,2,"6,972",<0.05
+Langvatn et al,2020,Operating room ventilation and the risk of revision due to infection after total hip arthroplasty: assessment of validated data in the Norwegian Arthroplasty Register,Original investigation,62,"51,292 ",0.01

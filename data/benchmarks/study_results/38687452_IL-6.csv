@@ -1,0 +1,14 @@
+first_author,year,full_reference,SMD,CI_lower,CI_upper,weight_percent
+Tornqvist,2007,Tornqvist H et al. (2007) Persistent endothelial dysfunction in humans after diesel exhaust inhalation. Am J Respir Crit Care Med 176(4):395-400,-1.11,-1.88,-0.34,6.24
+Brauner,2007,Brauner EV et al. (2008) Indoor particles affect vascular function in the aged: an air filtration-based intervention study. Am J Respir Crit Care Med 177(4):419-425,0.00,-0.43,0.43,9.62
+Allen,2011,Allen RW et al. (2011) An air filter intervention study of endothelial function among healthy adults in a woodsmoke-impacted community. Am J Respir Crit Care Med 183(9):1222-1230,-0.13,-0.55,0.28,9.83
+Riddervold(1),2012,Riddervold IS et al. (2012) Effects of wood smoke particles from wood-burning stoves on the respiratory health of atopic humans. Part Fibre Toxicol 9:12,0.52,-0.25,1.29,6.25
+Riddervold(2),2012,Riddervold IS et al. (2012) Effects of wood smoke particles from wood-burning stoves on the respiratory health of atopic humans. Part Fibre Toxicol 9:12,-1.15,-1.97,-0.34,5.88
+Chen,2015,"Chen R et al. (2015) Cardiopulmonary benefits of reducing indoor particles of outdoor origin: a randomized, double-blind crossover trial of air purifiers. J Am Coll Cardiol 65(21):2279-2287",0.00,-0.47,0.47,9.23
+Kajbafzadeh,2015,Kajbafzadeh M et al. (2015) The impacts of traffic related and woodsmoke particulate matter on measures of cardiovascular health: a HEPA filter intervention study. Occup Environ Med 72(6):394-400,0.04,-0.30,0.37,10.67
+Liu(1),2015,"Liu L et al. (2015) Effects of ambient coarse, fine, and ultrafine particles and their biological constituents on systemic biomarkers: a controlled human exposure study. Environ Health Perspect 123(6):534-540",-1.07,-1.49,-0.65,9.77
+Liu(2),2015,"Liu L et al. (2015) Effects of ambient coarse, fine, and ultrafine particles and their biological constituents on systemic biomarkers: a controlled human exposure study. Environ Health Perspect 123(6):534-540",-0.10,-0.58,0.38,9.10
+Cliff,2016,"Cliff R et al. (2016) Effect of diesel exhaust inhalation on blood markers of inflammation and neurotoxicity: a controlled, blinded crossover study. Inhal Toxicol 28(3):145-153",0.06,-0.47,0.58,8.63
+Shao,2017,Shao D et al. (2017) Cardiorespiratory responses of air filtration: A randomized crossover intervention trial in seniors living in Beijing. Sci Total Environ 603-604:541-549,-0.48,-1.21,0.25,6.63
+Guo,2021,"Guo M et al. (2021) Reducing particulates in indoor air can improve the circulation and cardiorespiratory health of old people: A randomized, double-blind crossover trial of air filtration. Sci Total Environ 798:149248",-0.25,-0.82,0.31,8.16
+Overall pooled effect,,"",-0.28,-0.54,-0.01,100.00

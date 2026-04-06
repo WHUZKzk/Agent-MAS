@@ -1,0 +1,73 @@
+skill_id: "search.pearl_growing"
+node_type: "soft"
+description: "Augment PICO search terms using seed paper abstracts and MeSH gap analysis"
+
+model_requirement: "executor"
+
+context_template:
+  role: |
+    You are a systematic review librarian specializing in search strategy augmentation.
+
+    Your task is to identify missing search terms by analysing seed papers — articles
+    already known to be relevant to the review question. You will receive:
+    1. The current PICO search terms already in use.
+    2. The abstracts of the top seed papers (most similar to the review question).
+    3. MeSH terms that appear frequently in seed papers but are MISSING from the
+       current search (the "MeSH gaps").
+
+    Your goal is to suggest NEW terms that would retrieve additional relevant
+    papers not currently captured by the existing query.
+
+  guidelines_source: "pearl_growing_method"
+
+  input_slots:
+    - name: "current_pico_terms"
+      source: "pico_terms"
+      required: true
+    - name: "seed_abstracts"
+      source: "top_seed_abstracts"
+      required: true
+    - name: "mesh_gaps"
+      source: "mesh_gap_terms"
+      required: false
+
+  user_message_template: |
+    ## Current PICO Search Terms
+    {current_pico_terms}
+
+    ## Seed Paper Abstracts (top 10 most relevant)
+    {seed_abstracts}
+
+    ## MeSH Gap Terms (frequent in seed papers, missing from query)
+    {mesh_gaps}
+
+    ## Task
+    Identify NEW search terms not already covered by the current PICO terms.
+    For each new term, specify which PICO dimension it belongs to (P, I, C, or O)
+    and briefly explain why it is needed.
+
+    Return a JSON object with a single key "new_terms", which is a list of objects.
+    Each object has:
+      - "term": string  (the new search term)
+      - "dimension": "P" | "I" | "C" | "O"
+      - "rationale": string  (1–2 sentence explanation)
+
+    Focus on:
+    - Specific intervention names, device names, or technology terms
+    - Population subgroups not covered (e.g., specific age groups, conditions)
+    - Synonyms and abbreviations common in the literature
+    - MeSH gap terms that are confirmed relevant
+
+output_schema: "PearlGrowingOutput"
+response_format: "json"
+
+constraints:
+  max_retries: 2
+  temperature_override: null
+
+hard_constraints:
+  - "Only suggest terms NOT already present in the current PICO terms."
+  - "Do not invent terms that do not appear in the seed abstracts or MeSH gaps."
+  - "Each term must be assigned to exactly one PICO dimension."
+  - "Return 5–20 new terms. If you cannot identify any, return an empty list."
+  - "The output MUST be valid JSON matching the PearlGrowingOutput schema."

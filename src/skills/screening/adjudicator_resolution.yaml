@@ -1,0 +1,56 @@
+skill_id: "screening.adjudicator_resolution"
+node_type: "soft"
+description: "Resolve conflicting reviewer answers via blinded chain-of-thought"
+
+model_requirement: "adjudicator"
+
+context_template:
+  role: |
+    You are an impartial methodological adjudicator for a systematic review.
+
+    Two independent reviewers have given conflicting answers to a screening
+    question. You will see:
+    - The question
+    - The paper's abstract (for reference)
+    - Reasoning 1 (from an anonymous reviewer)
+    - Reasoning 2 (from a different anonymous reviewer)
+
+    Your job is to evaluate which reasoning is more methodologically sound
+    based on the evidence in the abstract, and provide your final answer.
+
+  guidelines_source: "cochrane_ch7_screening"
+
+  input_slots:
+    - name: "paper_abstract"
+      source: "current_paper.abstract"
+      required: true
+    - name: "conflict_data"
+      source: "current_conflict"
+      required: true
+
+  user_message_template: |
+    ## Abstract
+    {paper_abstract}
+
+    ## Conflicting Question
+    **Question:** {conflict_data}
+
+    ## Task
+    1. Evaluate which reasoning is more faithful to the abstract text.
+    2. Identify any logical errors or unsupported assumptions in either reasoning.
+    3. Provide your final answer: YES, NO, or UNCERTAIN.
+
+    Return JSON: {{"adjudicated_answer": "...", "adjudication_reasoning": "..."}}
+
+output_schema: "ConflictRecord"
+response_format: "json"
+
+constraints:
+  max_retries: 2
+  temperature_override: 0.0
+
+hard_constraints:
+  - "You MUST NOT know which model or persona produced each reasoning."
+  - "Judge ONLY the logical quality of the reasoning against the abstract."
+  - "If both reasonings are equally valid, answer UNCERTAIN."
+  - "Do NOT introduce information not present in the abstract."

@@ -1,0 +1,13 @@
+First Author,Year,Title,Experimental Mean,Experimental SD,Experimental Total,Control Mean,Control SD,Control Total,Weight (%),SMD,95% CI Lower,95% CI Upper
+Bowling et al,2021,The adaptive GameSquad Xbox-based physical activity and health coaching intervention for youth with neurodevelopmental and psychiatric diagnoses: pilot feasibility study,-5.3,55.1,11,-58.8,85.7,12,2.7%,0.71,-0.14,1.56
+Comeras-Chueca et al,2022,Active video games improve muscular fitness and motor skills in children with overweight or obesity,21.5,45.2,16,-13.4,37.49,7,2.3%,0.78,-0.14,1.70
+Cowdery et al,2015,Exergame apps and physical activity: the results of the ZOMBIE trial,-93.4,190.2,20,-133.3,161.32,19,4.8%,0.22,-0.41,0.85
+Hamari et al,2019,The effect of an active video game intervention on physical activity motor performance and fatigue in children with cancer: a randomized controlled trial,50,45.9,12,58.7,73.5,16,3.5%,-0.13,-0.88,0.62
+Howie et al,2016,An active video game intervention does not improve physical activity and sedentary time of children at-risk for developmental coordination disorder: a crossover randomized trial,-4.2,49.97,21,-5.1,49.97,21,5.2%,0.02,-0.59,0.62
+Lau et al,2016,A randomized-controlled trial of school-based active videogame intervention on Chinese children's aerobic fitness physical activity level and psychological correlates,35.05,41.07,40,4.41,43.4,40,8.7%,0.72,0.27,1.17
+Lwin and Malik,2012,The efficacy of exergames-incorporated physical education lessons in influencing drivers of physical activity: a comparison of children and pre-adolescents,8.06,4.15,557,7.7,3.99,555,44.8%,0.09,-0.03,0.21
+Maloney et al,2008,A pilot of a video game (DDR) to promote physical activity and decrease sedentary screen time,-14.6,57.17,38,-29.1,57.86,20,6.3%,0.25,-0.29,0.79
+Maloney et al,2012,Comparative effectiveness of a 12-week physical activity intervention for overweight and obese youth: exergaming with Dance Dance Revolution,-5.65,39.31,20,-12.57,44.64,24,5.3%,0.16,-0.43,0.76
+Şimşek and Çekok,2016,The effects of Nintendo Wii-based balance and upper extremity training on activities of daily living and quality of life in patients with sub-acute stroke: a randomized controlled study,2,1.39,20,1.77,0.96,22,5.1%,0.19,-0.42,0.80
+van Santen et al,2020,Effects of exergaming on cognitive and social functioning of people with dementia: a randomized controlled trial,30.9,409.79,73,5.8,152.51,39,11.2%,0.07,-0.32,0.46
+Total (95% CI),,,,,828,,,775,100%,0.19,0.05,0.33

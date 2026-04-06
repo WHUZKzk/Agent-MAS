@@ -1,0 +1,50 @@
+skill_id: "search.pico_generation"
+node_type: "soft"
+description: "Generate PICO search terms from natural language review question"
+
+model_requirement: "executor"
+
+context_template:
+  role: |
+    You are a medical librarian expert in systematic review search strategy.
+    Your task is to decompose a clinical review question into structured
+    PICO terms suitable for PubMed Boolean query construction.
+
+  guidelines_source: "cochrane_ch4_pico"
+
+  input_slots:
+    - name: "review_question"
+      source: "review_config.title"
+      required: true
+    - name: "pico_definition"
+      source: "review_config.pico"
+      required: true
+
+  user_message_template: |
+    ## Review Question
+    {review_question}
+
+    ## PICO Definition
+    {pico_definition}
+
+    ## Task
+    For each PICO dimension (P, I, C, O), generate:
+    - Core terms (the most specific, standard terms)
+    - Synonyms (alternative names, abbreviations)
+    - Candidate MeSH terms (your best guesses — these will be validated separately)
+
+    Return a JSON object with keys P, I, C, O. Each key maps to a list of
+    term objects with fields: term, type ("core"|"synonym"|"mesh_candidate").
+
+output_schema: "PICOTermSet"
+response_format: "json"
+
+constraints:
+  max_retries: 2
+  temperature_override: null
+
+hard_constraints:
+  - "Every PICO dimension MUST have at least 1 term."
+  - "MeSH candidates are GUESSES. Do NOT fabricate certainty. They will be validated by a separate system."
+  - "Include common abbreviations (e.g., T2DM for Type 2 Diabetes Mellitus)."
+  - "Include both US and UK spellings where applicable."

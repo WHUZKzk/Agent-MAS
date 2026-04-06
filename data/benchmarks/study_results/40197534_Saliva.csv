@@ -1,0 +1,4 @@
+Study / Subgroup,Full Title,Exp Events,Exp Total,Ctrl Events,Ctrl Total,Weight %,Odds Ratio,95% CI
+Nagle 2005,A randomised controlled trial to evaluate the efficacy of a nurse-provided intervention for hospitalized smokers,48,711,54,711,0.463,0.88,"[0.59, 1.32]"
+Smith 2011,Nurse case-managed tobacco cessation interventions for general hospital patients...,85,301,76,315,0.537,1.24,"[0.86, 1.77]"
+Total (95% CI),-,133,1012,130,1026,1,1.06,"[0.76, 1.47]"

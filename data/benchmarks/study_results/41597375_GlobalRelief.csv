@@ -1,0 +1,8 @@
+First Author,Year,Title,Outcome,Probiotic Events,Probiotic Total,Placebo Events,Placebo Total,Weight (%),OR,95% CI Lower,95% CI Upper
+Andresen et al.,2020,Heat-inactivated Bifidobacterium bifidum MIMBb75 (SYN-HI-001) in the treatment of irritable bowel syndrome: A multicentre randomised double-blind placebo-controlled clinical trial,Adequate global relief from IBS symptoms,133,221,98,222,31.0%,1.91,1.31,2.79
+Jung et al.,2022,Effect of Oral Intake of Lactiplantibacillus plantarum APsulloc 331261 (GTB1) on Diarrhea-Predominant Irritable Bowel Syndrome: A Randomized Double-Blind Placebo-Controlled Study,Adequate global relief from IBS symptoms,12,13,1,8,7.7%,14.00,1.39,143.49
+Mack et al.,2022,A Nonviable Probiotic in Irritable Bowel Syndrome: A Randomized Double-Blind Placebo-Controlled Multicenter Study,Adequate global relief from IBS symptoms,33,187,25,197,28.1%,1.47,0.84,2.59
+Shin et al.,2018,A double blind placebo-controlled randomized clinical trial that breast milk derived-Lactobacillus gasseri BNR17 mitigated diarrhea-dominant irritable bowel syndrome,Adequate global relief from IBS symptoms,13,18,13,14,8.0%,0.04,0.00,0.37
+Spiller et al.,2015,Randomized double blind placebo-controlled trial of Saccharomyces cerevisiae CNCM I-3856 in irritable bowel syndrome: Improvement in abdominal pain and bloating in those with predominant constipation,Adequate global relief from IBS symptoms,42,69,29,51,25.2%,1.18,0.57,2.46
+Total (95% CI),,,Adequate global relief from IBS symptoms,,513,,492,100%,1.34,0.65,2.79
+Total events,,,,226,"",166,"",,,

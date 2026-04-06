@@ -1,0 +1,5 @@
+First Author,Year,Title,Outcome,Probiotic Events,Probiotic Total,Placebo Events,Placebo Total,Weight (%),OR,95% CI Lower,95% CI Upper
+Mezzasalma et al.,2016,A Randomized Double-Blind Placebo-Controlled Trial: The Efficacy of Multispecies Probiotic Supplementation in Alleviating Symptoms of Irritable Bowel Syndrome Associated with Constipation,Frequency of bowel movement (defecation frequency),40,50,5,50,49.1%,36.00,11.34,114.26
+Shanshal et al.,2023,Two Lactobacilli strains as adjuvant therapy in the management of irritable bowel syndrome: A randomized control trial,Frequency of bowel movement (defecation frequency),33,50,27,50,50.9%,1.65,0.74,3.71
+Total (95% CI),,,Frequency of bowel movement (defecation frequency),,100,,100,100%,7.50,0.36,154.51
+Total events,,,,73,"",32,"",,,

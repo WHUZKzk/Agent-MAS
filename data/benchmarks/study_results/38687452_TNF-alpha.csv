@@ -1,0 +1,8 @@
+first_author,year,full_reference,SMD,CI_lower,CI_upper,weight_percent
+Tornqvist,2007,Tornqvist H et al. (2007) Persistent endothelial dysfunction in humans after diesel exhaust inhalation. Am J Respir Crit Care Med 176(4):395-400,-0.64,-1.38,0.09,12.28
+Brauner,2007,Brauner EV et al. (2008) Indoor particles affect vascular function in the aged: an air filtration-based intervention study. Am J Respir Crit Care Med 177(4):419-425,0.77,0.32,1.22,18.18
+Chen,2015,"Chen R et al. (2015) Cardiopulmonary benefits of reducing indoor particles of outdoor origin: a randomized, double-blind crossover trial of air purifiers. J Am Coll Cardiol 65(21):2279-2287",-0.08,-0.55,0.39,17.72
+Cliff,2016,"Cliff R et al. (2016) Effect of diesel exhaust inhalation on blood markers of inflammation and neurotoxicity: a controlled, blinded crossover study. Inhal Toxicol 28(3):145-153",-0.07,-0.59,0.45,16.47
+Guo,2021,"Guo M et al. (2021) Reducing particulates in indoor air can improve the circulation and cardiorespiratory health of old people: A randomized, double-blind crossover trial of air filtration. Sci Total Environ 798:149248",-0.28,-0.85,0.29,15.50
+Wen,2022,"Wen F et al. (2022) Sensitive inflammatory biomarkers of acute fine particulate matter exposure among healthy young adults: Findings from a randomized, double-blind crossover trial on air filtration. Environ Pollut 301:119026",-0.04,-0.41,0.34,19.84
+Overall pooled effect,,"",-0.02,-0.37,0.34,100.00
