@@ -42,11 +42,13 @@ class DAGRunner:
         context_manager: "ContextManager",
         node_registry: Dict[str, Callable],
         max_iterations: int = 5,
+        progress_callback: Optional[Callable] = None,
     ) -> None:
         self.dag = dag
         self.context_manager = context_manager
         self.node_registry = node_registry
         self.max_iterations = max_iterations
+        self._progress_callback = progress_callback
 
         # Pre-build lookup structures
         self._node_map: Dict[str, NodeDefinition] = {
@@ -95,6 +97,32 @@ class DAGRunner:
         return state
 
     # ------------------------------------------------------------------
+    # Progress callback helper
+    # ------------------------------------------------------------------
+
+    def _emit(self, event_type: str, node_def: NodeDefinition, state: Dict[str, Any]) -> None:
+        """Fire the progress_callback if one was provided."""
+        if self._progress_callback is None:
+            return
+        from datetime import datetime, timezone
+        item_id: Optional[str] = None
+        if "current_paper" in state and hasattr(state["current_paper"], "pmid"):
+            item_id = f"PMID:{state['current_paper'].pmid}"
+        elif "current_pmid" in state:
+            item_id = f"PMID:{state['current_pmid']}"
+        try:
+            self._progress_callback({
+                "type": event_type,
+                "stage": self.dag.dag_id,
+                "node_id": node_def.node_id,
+                "item_id": item_id,
+                "message": f"{event_type}: {node_def.node_id} — {node_def.description}",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
+        except Exception:
+            pass  # Never let a callback error crash the pipeline
+
+    # ------------------------------------------------------------------
     # Node execution
     # ------------------------------------------------------------------
 
@@ -103,10 +131,13 @@ class DAGRunner:
     ) -> Dict[str, Any]:
         impl = self.node_registry[node_def.node_id]   # KeyError propagates
 
+        self._emit("node_start", node_def, state)
         if node_def.node_type == "soft":
-            return self._execute_soft(node_def, impl, state)
+            result = self._execute_soft(node_def, impl, state)
         else:
-            return self._execute_hard(node_def, impl, state)
+            result = self._execute_hard(node_def, impl, state)
+        self._emit("node_complete", node_def, result)
+        return result
 
     def _execute_hard(
         self,

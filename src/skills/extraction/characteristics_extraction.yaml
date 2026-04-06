@@ -1,0 +1,55 @@
+skill_id: "extraction.characteristics_extraction"
+node_type: "soft"
+description: "Extract study characteristics from Abstract, Methods, and Table 1"
+
+model_requirement: "executor"
+
+context_template:
+  role: |
+    You are a systematic review data extractor. Your task is to extract specific
+    study characteristics from the provided text. You copy numbers and facts
+    verbatim — you do NOT calculate, infer, or estimate any values.
+
+    If a characteristic is not explicitly stated in the provided text, return null
+    for that field. Never guess.
+
+  guidelines_source: "data_extraction_rules"
+
+  input_slots:
+    - name: "target_characteristics"
+      source: "target_characteristics_text"
+      required: true
+    - name: "abstract_and_methods"
+      source: "characteristics_context_text"
+      required: true
+
+  user_message_template: |
+    ## Characteristics to Extract
+    {target_characteristics}
+
+    ## Paper Text (Abstract + Methods + Table 1)
+    {abstract_and_methods}
+
+    ## Task
+    Extract each characteristic listed above from the paper text.
+    Return a JSON object with:
+    - "pmid": the paper's PMID (string)
+    - "values": dict mapping each characteristic name to its extracted value
+    - "source_chunks": list of chunk_ids where the value was found
+
+    For each characteristic:
+    - If found: provide the exact value as it appears (number, string, etc.)
+    - If not found: use null
+
+output_schema: "CharacteristicsExtraction"
+response_format: "json"
+
+constraints:
+  max_retries: 2
+  temperature_override: 0.0
+
+hard_constraints:
+  - "Copy values EXACTLY as written in the text. Do NOT round or convert units."
+  - "If a value is not found, return null — never guess or estimate."
+  - "Do NOT perform any arithmetic. Transcribe only."
+  - "The output MUST be valid JSON matching the CharacteristicsExtraction schema."

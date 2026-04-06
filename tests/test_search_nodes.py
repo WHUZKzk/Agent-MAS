@@ -106,11 +106,15 @@ class TestMeSHAlignment:
         When validate_mesh returns found=True, term gets:
           status="valid_mesh", search_field="[MeSH Terms]", normalized=descriptor_name
         """
+        found = mesh_result(True, descriptor_name="Exercise")
+        # Make all four default terms also hit Level 1 so spell_check is never called.
         client = make_mock_client(
-            validate_mesh_side_effect=[
-                mesh_result(True, descriptor_name="Exercise"),
-            ],
-            spell_check_side_effect=[],
+            validate_mesh_by_term={
+                "Exercise": found,
+                "adults":   found,
+                "control":  found,
+                "IL-6":     found,
+            },
         )
         pico = make_pico(I=["Exercise"])
         result = asyncio.run(align_pico_terms(pico, client))
@@ -119,16 +123,15 @@ class TestMeSHAlignment:
         assert term.status == "valid_mesh"
         assert term.search_field == "[MeSH Terms]"
         assert term.normalized == "Exercise"
-        # spell_check must NOT be called (short-circuit after Level 1)
+        # spell_check must NOT be called at all (every term short-circuits at Level 1)
         client.spell_check.assert_not_called()
 
     def test_level1_normalized_uses_descriptor_not_original(self):
         """Normalized stores the official MeSH descriptor name, not the original."""
         client = make_mock_client(
-            validate_mesh_side_effect=[
-                mesh_result(True, descriptor_name="Diabetes Mellitus, Type 2"),
-            ],
-            spell_check_side_effect=[],
+            validate_mesh_by_term={
+                "type 2 diabetes": mesh_result(True, descriptor_name="Diabetes Mellitus, Type 2"),
+            },
         )
         pico = make_pico(P=["type 2 diabetes"])
         result = asyncio.run(align_pico_terms(pico, client))
@@ -143,11 +146,13 @@ class TestMeSHAlignment:
           status="mapped", search_field="[MeSH Terms]"
         """
         client = make_mock_client(
-            validate_mesh_side_effect=[
-                mesh_result(False),                               # Level 1 miss
-                mesh_result(True, descriptor_name="Hypertension"),# Level 2 hit
-            ],
-            spell_check_side_effect=["hypertension"],             # correction available
+            validate_mesh_by_term={
+                "hpertension": mesh_result(False),                        # Level 1 miss
+                "hypertension": mesh_result(True, descriptor_name="Hypertension"),  # Level 2 hit
+            },
+            spell_check_by_term={
+                "hpertension": "hypertension",   # correction available
+            },
         )
         pico = make_pico(P=["hpertension"])   # typo
         result = asyncio.run(align_pico_terms(pico, client))
@@ -160,11 +165,14 @@ class TestMeSHAlignment:
     def test_level2_no_spell_correction_skips_to_level3(self):
         """When spell_check returns None, go directly to Level 3."""
         client = make_mock_client(
-            validate_mesh_side_effect=[
-                mesh_result(False, descriptor_name="Exercise Therapy",
-                            entry_terms=["exercise therapy", "Exercise Therapy"]),
-            ],
-            spell_check_side_effect=[None],   # no correction
+            validate_mesh_by_term={
+                "exercise therap": mesh_result(
+                    False,
+                    descriptor_name="Exercise Therapy",
+                    entry_terms=["exercise therapy", "Exercise Therapy"],
+                ),
+            },
+            # spell_check_by_term left empty → all terms return None
         )
         pico = make_pico(I=["exercise therap"])
         result = asyncio.run(align_pico_terms(pico, client))
@@ -180,16 +188,15 @@ class TestMeSHAlignment:
         When fuzzy score ≥ 80 against NCBI-returned descriptor/entry_terms:
           status="fuzzy_mapped", search_field="[MeSH Terms]", similarity_score set
         """
-        # "Physycal Activity" → fuzzy matches "Physical Activity" (entry term)
+        # "Physical Activty" → fuzzy matches "Physical Activity" (entry term)
         client = make_mock_client(
-            validate_mesh_side_effect=[
-                mesh_result(
+            validate_mesh_by_term={
+                "Physical Activty": mesh_result(
                     False,
                     descriptor_name="Exercise",
                     entry_terms=["Physical Activity", "Motor Activity"],
                 ),
-            ],
-            spell_check_side_effect=[None],   # no correction
+            },
         )
         pico = make_pico(I=["Physical Activty"])   # single typo
         result = asyncio.run(align_pico_terms(pico, client))
@@ -206,14 +213,13 @@ class TestMeSHAlignment:
           status="not_found", search_field="[tiab]"
         """
         client = make_mock_client(
-            validate_mesh_side_effect=[
-                mesh_result(
+            validate_mesh_by_term={
+                "exergame": mesh_result(
                     False,
                     descriptor_name="Astrophysics",
                     entry_terms=["cosmic rays", "dark matter"],
                 ),
-            ],
-            spell_check_side_effect=[None],
+            },
         )
         pico = make_pico(I=["exergame"])   # no close MeSH match
         result = asyncio.run(align_pico_terms(pico, client))
@@ -225,10 +231,9 @@ class TestMeSHAlignment:
     def test_level3_no_ncbi_candidates_is_not_found(self):
         """When validate_mesh returns nothing at all → not_found."""
         client = make_mock_client(
-            validate_mesh_side_effect=[
-                mesh_result(False),    # no descriptor, no entry_terms
-            ],
-            spell_check_side_effect=[None],
+            validate_mesh_by_term={
+                "somecompletelyunknownterm": mesh_result(False),  # no descriptor, no entry_terms
+            },
         )
         pico = make_pico(O=["somecompletelyunknownterm"])
         result = asyncio.run(align_pico_terms(pico, client))
@@ -243,8 +248,12 @@ class TestMeSHAlignment:
         """align_pico_terms processes every term in every PICO dimension."""
         found_result = mesh_result(True, descriptor_name="X")
         client = make_mock_client(
-            validate_mesh_side_effect=[found_result] * 4,  # 4 terms (one per dim)
-            spell_check_side_effect=[],
+            validate_mesh_by_term={
+                "p1": found_result,
+                "i1": found_result,
+                "c1": found_result,
+                "o1": found_result,
+            },
         )
         pico = make_pico(P=["p1"], I=["i1"], C=["c1"], O=["o1"])
         result = asyncio.run(align_pico_terms(pico, client))
@@ -255,12 +264,10 @@ class TestMeSHAlignment:
     def test_multiple_terms_per_dimension_all_processed(self):
         """Multiple terms per dimension are each independently aligned."""
         client = make_mock_client(
-            validate_mesh_side_effect=[
-                mesh_result(True, descriptor_name="Diabetes Mellitus, Type 2"),
-                mesh_result(False),
-                mesh_result(False),  # for spell check second call
-            ],
-            spell_check_side_effect=[None, None],
+            validate_mesh_by_term={
+                "type 2 diabetes": mesh_result(True, descriptor_name="Diabetes Mellitus, Type 2"),
+                # "unknownterm" and all defaults fall back to mesh_result(False)
+            },
         )
         pico = make_pico(P=["type 2 diabetes", "unknownterm"])
         result = asyncio.run(align_pico_terms(pico, client))
@@ -272,8 +279,9 @@ class TestMeSHAlignment:
     def test_returns_new_picoterm_set_not_mutated_original(self):
         """The original PICOTermSet must not be mutated; a new one is returned."""
         client = make_mock_client(
-            validate_mesh_side_effect=[mesh_result(True, descriptor_name="Exercise")],
-            spell_check_side_effect=[],
+            validate_mesh_by_term={
+                "Exercise": mesh_result(True, descriptor_name="Exercise"),
+            },
         )
         original = make_pico(I=["Exercise"])
         original_status = original.I[0].status   # "not_found"
@@ -294,8 +302,9 @@ class TestMeSHAlignment:
         not_found always gets [tiab].
         """
         client = make_mock_client(
-            validate_mesh_side_effect=[mesh_result(False)],
-            spell_check_side_effect=[None],
+            validate_mesh_by_term={
+                "unknownbiomarker": mesh_result(False),
+            },
         )
         pico = make_pico(O=["unknownbiomarker"])
         result = asyncio.run(align_pico_terms(pico, client))

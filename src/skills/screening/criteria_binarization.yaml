@@ -1,0 +1,60 @@
+skill_id: "screening.criteria_binarization"
+node_type: "soft"
+description: "Convert PICO review question into binary screening criteria questions"
+
+model_requirement: "executor"
+
+context_template:
+  role: |
+    You are a systematic review methodologist specializing in study screening.
+    Your task is to convert a PICO-structured review question into a set of
+    binary eligibility criteria questions — each answerable YES, NO, or UNCERTAIN
+    by reading only the title and abstract of a candidate paper.
+
+  guidelines_source: "cochrane_ch7_screening"
+
+  input_slots:
+    - name: "review_title"
+      source: "review_config.title"
+      required: true
+    - name: "pico_definition"
+      source: "review_config.pico"
+      required: true
+
+  user_message_template: |
+    ## Review Question
+    {review_title}
+
+    ## PICO Definition
+    {pico_definition}
+
+    ## Task
+    Generate binary screening criteria questions for this review. Each question must:
+    - Be answerable YES / NO / UNCERTAIN based on abstract text alone.
+    - Be assigned to exactly one PICO dimension (P, I, C, or O).
+    - Have a unique question_id in the format "Q_P1", "Q_I2", "Q_C1", etc.
+
+    You MUST produce at least 1 question per dimension (P, I, C, O).
+    Aim for 2-3 questions per dimension for granularity.
+
+    Return a JSON object with:
+    - "questions": list of question objects, each with:
+        - "question_id": string (e.g. "Q_P1")
+        - "dimension": "P" | "I" | "C" | "O"
+        - "question_text": string (the binary question)
+        - "answerable_by": "YES"  (always "YES" — this field is fixed)
+    - "reflexion_rounds": 1
+
+output_schema: "ScreeningCriteria"
+response_format: "json"
+
+constraints:
+  max_retries: 2
+  temperature_override: 0.0
+
+hard_constraints:
+  - "At least 1 question per PICO dimension (P, I, C, O) is MANDATORY."
+  - "Each question_id must be unique and follow the format Q_<DIM><N> (e.g. Q_P1, Q_I2)."
+  - "Questions must be binary — answerable by YES, NO, or UNCERTAIN."
+  - "Do NOT make inclusion/exclusion decisions. Only generate questions."
+  - "The output MUST be valid JSON matching the ScreeningCriteria schema."

@@ -30,7 +30,7 @@ from rapidfuzz import fuzz
 from src.clients.pubmed_client import MeSHResult, PubMedClient
 from src.engine.agents import ExecutorAgent, ReviewerAdjudicatorAgent
 from src.engine.context_manager import ContextManager, MountedContext
-from src.engine.dag import DAGRunner, DAGDefinition
+from src.engine.dag import DAGRunner
 from src.engine.model_registry import ModelRegistry
 from src.engine.nodes import HardNode, SoftNode
 from src.schemas.common import (
@@ -634,9 +634,11 @@ class SearchPipeline:
         context_manager: ContextManager,
         model_registry: ModelRegistry,
         pubmed_client: PubMedClient,
+        progress_callback: Optional[Any] = None,
     ) -> None:
         self._review_config = review_config
         self._cm = context_manager
+        self._progress_callback = progress_callback
 
         # Build executor agent (for PICO gen and Pearl Growing)
         exec_cfg = model_registry.get_default("executor")
@@ -668,6 +670,7 @@ class SearchPipeline:
             dag=SEARCH_DAG,
             context_manager=self._cm,
             node_registry=self._node_registry,
+            progress_callback=self._progress_callback,
         )
         initial_state = {"review_config": self._review_config}
         final_state = runner.run(initial_state)
