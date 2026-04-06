@@ -5,6 +5,54 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="60617d0d-9bad-4f84-ad61-de48c4940ba0" name="更改" comment="">
+      <change afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/math_sandbox.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/orchestrator.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/skills/extraction/characteristics_extraction.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/skills/extraction/chunk_relevance_scoring.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/skills/extraction/document_cartography.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/skills/screening/criteria_binarization.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/stages/extraction_pipeline.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/stages/screening_pipeline.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/text_parser.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_integration.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_math_sandbox.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_screening_nodes.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/api/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/api/database.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/api/dependencies.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/api/main.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/api/models.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/api/routes/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/api/routes/reviews.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/api/routes/websocket.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/frontend/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/frontend/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/frontend/postcss.config.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/frontend/src/App.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/frontend/src/api.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/frontend/src/components/FileUploader.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/frontend/src/components/PaperTable.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/frontend/src/components/ProgressStream.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/frontend/src/components/Sidebar.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/frontend/src/hooks/useWebSocket.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/frontend/src/index.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/frontend/src/main.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/frontend/src/pages/ConfigureReview.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/frontend/src/pages/ExtractionResults.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/frontend/src/pages/FinalResults.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/frontend/src/pages/ScreeningDashboard.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/frontend/src/pages/SearchResults.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/frontend/src/pages/UploadFullTexts.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/frontend/src/types.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/frontend/tailwind.config.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/frontend/tsconfig.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/frontend/tsconfig.node.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/frontend/vite.config.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.claude/settings.local.json" beforeDir="false" afterPath="$PROJECT_DIR$/.claude/settings.local.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
@@ -92,7 +140,7 @@
       <option name="presentableId" value="Default" />
       <updated>1775475123198</updated>
       <workItem from="1775475124495" duration="9056000" />
-      <workItem from="1775489146090" duration="9363000" />
+      <workItem from="1775489146090" duration="9660000" />
     </task>
     <servers />
   </component>
