@@ -1,35 +1,19 @@
 {
   "permissions": {
     "allow": [
-      "Bash(ls /mnt/)",
-      "Read(//d//**)",
-      "Bash(cmd //c \"dir D:\\\\Agent-MAS\")",
-      "Bash(python -c \"import pydantic; print\\(pydantic.__version__\\)\")",
-      "Bash(python -c \"import yaml; print\\('pyyaml ok'\\)\")",
-      "Bash(python -c \"import openai; print\\('openai ok'\\)\")",
+      "Bash(python3 -c \"import json, sys; nb=json.load\\(sys.stdin\\); [print\\(cell['source'][:500] if len\\(cell['source']\\)>500 else cell['source']\\) for cell in nb['cells'] if 'source' in cell]\")",
+      "Bash(python3 -c \"import json; data = json.load\\(open\\('/d/Agent-MAS/data/benchmarks/bench_review.json'\\)\\); print\\(list\\(data[0].keys\\(\\)\\)\\)\")",
       "Bash(python:*)",
-      "Bash(pytest tests/test_dag.py -v)",
-      "Bash(pytest:*)",
-      "Bash(wc -l /d/Agent-MAS/data/benchmarks/study_results/*.csv)",
-      "Bash(wc:*)",
+      "Bash(head -10 data/benchmarks/study_results/*.csv)",
+      "Bash(ls -la *.pdf)",
+      "Bash(xargs grep:*)",
+      "WebFetch(domain:)",
+      "Bash(pdftotext \"Chained Prompting for Better Systematic Review Search Strategies.pdf\" -)",
+      "Bash(python3 -m json.tool)",
+      "Bash(python3:*)",
       "Bash(pip install:*)",
-      "Bash(/d/anaconda3/Scripts/pip install:*)",
-      "Read(//d D:/**)",
-      "Bash(where pytest:*)",
-      "Bash(py -m pytest tests/test_integration.py -x --tb=short)",
-      "Bash(where python:*)",
-      "Bash(D:\\\\anaconda3\\\\Scripts\\\\pytest.exe tests/test_integration.py -x --tb=short)",
-      "Bash(\"/d/anaconda3/Scripts/pytest\" tests/test_integration.py -x --tb=short)",
-      "Bash(\"/d/anaconda3/Scripts/pytest\" tests/test_integration.py -v --tb=short)",
-      "Bash(\"/d/anaconda3/Scripts/pytest\" tests/ -v --tb=short)",
-      "Bash(\"/d/anaconda3/Scripts/pytest\" tests/ -q --tb=short)",
-      "Bash(\"/d/anaconda3/python\" -c \"from web.api.main import app; print\\('FastAPI app imports OK'\\)\")",
-      "Bash(\"/d/anaconda3/python\" -c \"import pkg_resources; pkgs = [p.project_name for p in pkg_resources.working_set]; print\\([p for p in pkgs if 'fastapi' in p.lower\\(\\) or 'sqlalchemy' in p.lower\\(\\) or 'uvicorn' in p.lower\\(\\)]\\)\")",
-      "Bash(\"/d/anaconda3/python\" -m pip install fastapi \"uvicorn[standard]\" python-multipart --quiet)",
-      "Bash(/d/anaconda3/python -c ':*)",
-      "Bash(\"/d/anaconda3/Scripts/pytest\" tests/ -q)",
-      "Bash(\"/d/anaconda3/python\" -m pip install python-dotenv --quiet)",
-      "Bash(\"/d/anaconda3/python\" -c \"from dotenv import load_dotenv; print\\('python-dotenv OK'\\)\")"
+      "Bash(git add:*)",
+      "Bash(git rm:*)"
     ]
   }
 }

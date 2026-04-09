@@ -1,23 +1,12 @@
-# Core pipeline dependencies
-pydantic>=2.0
-pydantic-settings
-pyyaml
-aiohttp
-rapidfuzz
-scikit-learn
-numpy
-
-# PubMed client
-biopython
-
-# Web layer
-fastapi>=0.115
-uvicorn[standard]>=0.30
-sqlalchemy>=2.0
-python-multipart       # FastAPI file uploads
-
-python-dotenv          # Load .env automatically
-
-# Dev / test
-pytest
-pytest-asyncio
+openai>=1.0.0
+httpx>=0.24.0
+tenacity>=8.0.0
+fastapi>=0.100.0
+uvicorn[standard]>=0.22.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+requests>=2.28.0
+beautifulsoup4>=4.11.0
+lxml>=4.9.0
+pandas>=1.5.0
+python-dotenv>=1.0.0
