@@ -239,11 +239,11 @@
             <span class="text-xs font-semibold text-blue-700 mr-1">人群 / Population</span>
             <span id="terms-pop"></span>
           </div>
-          <div class="mb-2">
+          <div>
             <span class="text-xs font-semibold text-green-700 mr-1">干预 / Intervention</span>
             <span id="terms-int"></span>
           </div>
-          <div>
+          <div id="terms-out-row" class="hidden mt-2">
             <span class="text-xs font-semibold text-yellow-700 mr-1">结局 / Outcome</span>
             <span id="terms-out"></span>
           </div>
@@ -530,7 +530,9 @@ function renderSearchResults(data) {
     document.getElementById('terms-panel').classList.remove('hidden');
     renderTags('terms-pop', st.populations  || [], 'tag-pop');
     renderTags('terms-int', st.interventions || [], 'tag-int');
-    renderTags('terms-out', st.outcomes     || [], 'tag-out');
+    const outcomes = st.outcomes || [];
+    renderTags('terms-out', outcomes, 'tag-out');
+    document.getElementById('terms-out-row').classList.toggle('hidden', outcomes.length === 0);
   }
 
   // Papers
