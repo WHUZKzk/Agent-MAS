@@ -59,7 +59,10 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 @app.get("/", include_in_schema=False)
 def root():
-    return FileResponse(str(STATIC_DIR / "index.html"))
+    return FileResponse(
+        str(STATIC_DIR / "index.html"),
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
+    )
 
 # ---------------------------------------------------------------------------
 # Routers

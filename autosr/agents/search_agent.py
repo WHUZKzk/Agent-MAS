@@ -192,17 +192,16 @@ class SearchAgent(BaseAgent):
         step3 = parsed.get("step 3", {})
 
         populations   = list(set(step2.get("CORE_POPULATION",   []) + step3.get("EXPAND_POPULATION",   [])))
-        interventions = list(set(step2.get("CORE_INTERVENTION",  []) + step3.get("EXPAND_INTERVENTION",  [])))
-        outcomes      = list(set(step2.get("CORE_OUTCOME",       []) + step3.get("EXPAND_OUTCOME",       [])))
+        interventions = list(set(step2.get("CORE_INTERVENTION", []) + step3.get("EXPAND_INTERVENTION", [])))
 
         logger.info(
-            "Refined terms — pop: %d, int: %d, out: %d",
-            len(populations), len(interventions), len(outcomes),
+            "Refined terms — pop: %d, int: %d",
+            len(populations), len(interventions),
         )
         return SearchTerms(
             populations=populations,
             interventions=interventions,
-            outcomes=outcomes,
+            outcomes=[],  # outcomes not extracted for search (used in screening only)
         )
 
     def _pubmed_search(
@@ -213,13 +212,17 @@ class SearchAgent(BaseAgent):
         max_year: Optional[int] = None,
         fetch_all: bool = False,
     ):
+        # Search strategy: P + I only.
+        # Outcome terms are intentionally excluded from the query to maximise
+        # recall — many studies measure the target outcome without naming it
+        # explicitly in the title/abstract (Cochrane Handbook recommendation).
+        # Outcomes are still extracted and displayed in the UI, and are used
+        # in full during the screening phase.
         keyword_map = {}
         if search_terms.populations:
             keyword_map["population"] = search_terms.populations
         if search_terms.interventions:
             keyword_map["intervention"] = search_terms.interventions
-        if search_terms.outcomes:
-            keyword_map["outcome"] = search_terms.outcomes
 
         inputs: dict = {"keyword_map": keyword_map, "page_size": retmax}
         if min_year:
