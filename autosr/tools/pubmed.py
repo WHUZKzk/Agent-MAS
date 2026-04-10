@@ -339,3 +339,66 @@ class PubmedAPIWrapper:
         except Exception:
             logger.error("PubMed search failed: %s", traceback.format_exc())
             return [], url, 0
+
+    def search_all(self, inputs: dict):
+        """
+        Fetch ALL PMIDs matching the query using retstart pagination.
+        Ignores page_size in inputs; uses PAGE_SIZE=10000 per request.
+        Returns (pmid_list, query_url, total_count).
+
+        Note: for very large result sets (>50k) this may take a while —
+        each page is a separate HTTP request.
+        """
+        PAGE_SIZE = 10_000
+
+        # Build the base paginated URL (retmax=PAGE_SIZE)
+        paged_inputs = dict(inputs)
+        paged_inputs["page_size"] = PAGE_SIZE
+        base_url = self.build_query_string(paged_inputs)
+        query_url = base_url  # returned for display
+
+        try:
+            # First page — also gives us total_count
+            first_url = base_url + "&retstart=0"
+            logger.info("PubMed search_all (page 0): %s", first_url)
+            resp = self._get_response(first_url)
+            if resp.status_code != 200:
+                logger.error("PubMed search_all error: %s", resp.text)
+                return [], query_url, 0
+            data = json.loads(resp.text)
+            total_count = int(data["esearchresult"]["count"])
+            all_pmids: list = list(data["esearchresult"]["idlist"])
+            logger.info(
+                "search_all: total=%d, fetched so far=%d",
+                total_count, len(all_pmids),
+            )
+
+            # Subsequent pages
+            for retstart in range(PAGE_SIZE, total_count, PAGE_SIZE):
+                page_url = base_url + f"&retstart={retstart}"
+                logger.info("PubMed search_all (retstart=%d): %s", retstart, page_url)
+                resp = self._get_response(page_url)
+                if resp.status_code != 200:
+                    logger.warning(
+                        "search_all: page retstart=%d returned %d, stopping early",
+                        retstart, resp.status_code,
+                    )
+                    break
+                page_data = json.loads(resp.text)
+                batch = page_data["esearchresult"]["idlist"]
+                all_pmids.extend(batch)
+                logger.info(
+                    "search_all: fetched %d/%d PMIDs (retstart=%d)",
+                    len(all_pmids), total_count, retstart,
+                )
+
+            all_pmids = list(set(all_pmids))  # deduplicate
+            logger.info(
+                "search_all complete: %d unique PMIDs (PubMed total: %d)",
+                len(all_pmids), total_count,
+            )
+            return all_pmids, query_url, total_count
+
+        except Exception:
+            logger.error("PubMed search_all failed: %s", traceback.format_exc())
+            return [], query_url, 0

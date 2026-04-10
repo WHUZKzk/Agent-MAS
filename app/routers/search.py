@@ -22,7 +22,10 @@ router = APIRouter(prefix="/api/search", tags=["search"])
 
 class SearchRequest(BaseModel):
     pico: PICODefinition
-    retmax: int = Field(default=1000, ge=1, le=1000, description="Max papers to retrieve (1-1000)")
+    retmax: int = Field(default=1000, ge=1, le=100000, description="Max papers to retrieve (ignored when fetch_all=true)")
+    fetch_all: bool = Field(default=False, description="Retrieve ALL papers matching the query (overrides retmax; may be slow for large result sets)")
+    min_year: Optional[int] = Field(default=None, ge=1900, le=2100, description="Earliest publication year")
+    max_year: Optional[int] = Field(default=None, ge=1900, le=2100, description="Latest publication year")
 
 
 class SearchResponse(BaseModel):
@@ -38,15 +41,21 @@ class SearchResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 @router.post("", response_model=SearchResponse, summary="Search PubMed for candidate papers")
-async def search_papers(request: SearchRequest):
+def search_papers(request: SearchRequest):
     """
     Generate domain-agnostic search terms from PICO, query PubMed,
     and return up to `retmax` papers with title + abstract metadata.
     """
-    logger.info("POST /api/search  retmax=%d", request.retmax)
+    logger.info("POST /api/search  retmax=%d  fetch_all=%s", request.retmax, request.fetch_all)
     try:
         agent = SearchAgent()
-        result: SearchResult = agent.run(pico=request.pico, retmax=request.retmax)
+        result: SearchResult = agent.run(
+            pico=request.pico,
+            retmax=request.retmax,
+            min_year=request.min_year,
+            max_year=request.max_year,
+            fetch_all=request.fetch_all,
+        )
     except Exception as exc:
         logger.exception("SearchAgent failed")
         raise HTTPException(status_code=500, detail=str(exc))

@@ -89,17 +89,24 @@ def _clean_content(text: str) -> str:
     return cleaned.strip()
 
 
-async def _gather_text(messages_list: list, temperature: float = 0.0) -> list:
-    tasks = [_call_async(msgs, temperature=temperature) for msgs in messages_list]
-    return await asyncio.gather(*tasks)
+async def _gather_text(messages_list: list, temperature: float = 0.0, max_concurrency: int = 50) -> list:
+    semaphore = asyncio.Semaphore(max_concurrency)
+
+    async def _call_with_sem(msgs):
+        async with semaphore:
+            return await _call_async(msgs, temperature=temperature)
+
+    return await asyncio.gather(*[_call_with_sem(msgs) for msgs in messages_list])
 
 
-async def _gather_tools(messages_list: list, tools: list, temperature: float = 0.0) -> list:
-    tasks = [
-        _call_async(msgs, tools=tools, temperature=temperature)
-        for msgs in messages_list
-    ]
-    return await asyncio.gather(*tasks)
+async def _gather_tools(messages_list: list, tools: list, temperature: float = 0.0, max_concurrency: int = 50) -> list:
+    semaphore = asyncio.Semaphore(max_concurrency)
+
+    async def _call_with_sem(msgs):
+        async with semaphore:
+            return await _call_async(msgs, tools=tools, temperature=temperature)
+
+    return await asyncio.gather(*[_call_with_sem(msgs) for msgs in messages_list])
 
 
 def _run_async(coro):
@@ -133,20 +140,14 @@ def batch_call_llm(
     prompt_template: str,
     batch_inputs: list,
     temperature: float = 0.0,
-    batch_size: Optional[int] = None,
+    max_concurrency: int = 50,
 ) -> List[str]:
-    """Parallel async LLM calls on a batch of inputs, returns list of text responses."""
+    """
+    Parallel async LLM calls on a batch of inputs, returns list of text responses.
+    max_concurrency limits how many requests are in-flight at once (Semaphore-based).
+    """
     all_messages = [_prompt_to_messages(prompt_template, inp) for inp in batch_inputs]
-
-    if batch_size:
-        results = []
-        for i in range(0, len(all_messages), batch_size):
-            chunk = all_messages[i : i + batch_size]
-            raw = _run_async(_gather_text(chunk, temperature=temperature))
-            results.extend(raw)
-    else:
-        results = _run_async(_gather_text(all_messages, temperature=temperature))
-
+    results = _run_async(_gather_text(all_messages, temperature=temperature, max_concurrency=max_concurrency))
     return [_clean_content(r.choices[0].message.content) for r in results]
 
 
@@ -155,24 +156,16 @@ def batch_function_call_llm(
     batch_inputs: list,
     tool: dict,
     temperature: float = 0.0,
-    batch_size: Optional[int] = None,
+    max_concurrency: int = 50,
 ) -> List[dict]:
     """
     Parallel async LLM calls with function calling.
-    Returns list of parsed dicts (tool_calls arguments).
-    Falls back to {} on parse failure.
+    max_concurrency limits how many requests are in-flight at once (Semaphore-based).
+    Returns list of parsed dicts (tool_calls arguments). Falls back to {} on parse failure.
     """
     tools = [tool]
     all_messages = [_prompt_to_messages(prompt_template, inp) for inp in batch_inputs]
-
-    if batch_size:
-        results = []
-        for i in range(0, len(all_messages), batch_size):
-            chunk = all_messages[i : i + batch_size]
-            raw = _run_async(_gather_tools(chunk, tools=tools, temperature=temperature))
-            results.extend(raw)
-    else:
-        results = _run_async(_gather_tools(all_messages, tools=tools, temperature=temperature))
+    results = _run_async(_gather_tools(all_messages, tools=tools, temperature=temperature, max_concurrency=max_concurrency))
 
     parsed = []
     for r in results:

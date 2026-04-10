@@ -4,7 +4,10 @@ POST /api/screen
 Accepts a list of papers + PICO → runs ScreeningAgent → returns per-paper decisions.
 """
 
+import json
+
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from typing import List, Optional
 import logging
@@ -35,7 +38,7 @@ class ScreenRequest(BaseModel):
     papers: List[PaperInput] = Field(description="Papers to screen (title + abstract required)")
     num_title_criteria: int = Field(default=3, ge=1, le=5)
     num_content_criteria: int = Field(default=3, ge=1, le=5)
-    batch_size: int = Field(default=10, ge=1, le=50, description="Papers processed in parallel per LLM batch")
+    max_concurrency: int = Field(default=50, ge=1, le=200, description="Max parallel LLM requests (Semaphore-based)")
 
 
 class CriteriaOut(BaseModel):
@@ -69,17 +72,17 @@ class ScreenResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 @router.post("", response_model=ScreenResponse, summary="Screen papers for inclusion in meta-analysis")
-async def screen_papers(request: ScreenRequest):
+def screen_papers(request: ScreenRequest):
     """
     Generate PICO-based eligibility criteria, evaluate every paper against
     all criteria, and return per-paper INCLUDE / EXCLUDE / UNCERTAIN decisions.
     """
     logger.info(
-        "POST /api/screen  papers=%d  criteria=%d+%d  batch=%d",
+        "POST /api/screen  papers=%d  criteria=%d+%d  max_concurrency=%d",
         len(request.papers),
         request.num_title_criteria,
         request.num_content_criteria,
-        request.batch_size,
+        request.max_concurrency,
     )
 
     # Convert request papers to domain Paper objects
@@ -103,7 +106,7 @@ async def screen_papers(request: ScreenRequest):
             pico=request.pico,
             num_title_criteria=request.num_title_criteria,
             num_content_criteria=request.num_content_criteria,
-            batch_size=request.batch_size,
+            max_concurrency=request.max_concurrency,
         )
     except Exception as exc:
         logger.exception("ScreeningAgent failed")
@@ -130,4 +133,67 @@ async def screen_papers(request: ScreenRequest):
             excluded=result.summary.excluded,
             uncertain=result.summary.uncertain,
         ),
+    )
+
+
+# ---------------------------------------------------------------------------
+# SSE streaming endpoint
+# ---------------------------------------------------------------------------
+
+@router.post("/stream", summary="Screen papers with real-time SSE progress")
+def screen_papers_stream(request: ScreenRequest):
+    """
+    Same as POST /api/screen but streams progress via Server-Sent Events.
+
+    Event stream format (each line: ``data: <json>\\n\\n``):
+
+    * ``{"type": "criteria",   "data": {...}}``  — criteria generated
+    * ``{"type": "paper_done", "data": {...}}``  — one paper screened
+    * ``{"type": "summary",    "data": {...}}``  — final counts
+    * ``{"type": "done"}``                       — stream finished
+    * ``{"type": "error",      "data": "..."}``  — fatal error
+    """
+    logger.info(
+        "POST /api/screen/stream  papers=%d  criteria=%d+%d  max_concurrency=%d",
+        len(request.papers),
+        request.num_title_criteria,
+        request.num_content_criteria,
+        request.max_concurrency,
+    )
+
+    papers = [
+        Paper(
+            pmid=p.pmid,
+            title=p.title,
+            abstract=p.abstract,
+            authors=p.authors,
+            year=p.year,
+            journal=p.journal,
+            publication_type=p.publication_type,
+        )
+        for p in request.papers
+    ]
+
+    def event_generator():
+        agent = ScreeningAgent()
+        try:
+            for event in agent.run_stream(
+                papers=papers,
+                pico=request.pico,
+                num_title_criteria=request.num_title_criteria,
+                num_content_criteria=request.num_content_criteria,
+                max_concurrency=request.max_concurrency,
+            ):
+                yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
+        except Exception as exc:
+            logger.exception("ScreeningAgent stream failed")
+            yield f"data: {json.dumps({'type': 'error', 'data': str(exc)})}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
     )

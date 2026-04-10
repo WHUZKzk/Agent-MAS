@@ -4,20 +4,25 @@ AutoSR FastAPI application entry point.
 Start with:
     uvicorn app.main:app --reload --port 8000
 
-Endpoints:
-    POST /api/search  — search PubMed from PICO
-    POST /api/screen  — screen papers against PICO-derived criteria
+Pages:
+    GET  /          → Web UI (app/static/index.html)
+    GET  /docs      → Swagger UI
+
+API:
+    POST /api/search  — PICO → candidate papers
+    POST /api/screen  — papers + PICO → inclusion decisions
+    GET  /api/reviews — list benchmark reviews
     GET  /api/health  — health check
-    GET  /docs        — Swagger UI (auto-generated)
 """
 
-import logging
 import json
+import logging
 from pathlib import Path
-from typing import List
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.routers import search, screening
 
@@ -35,11 +40,7 @@ logger = logging.getLogger("autosr")
 # ---------------------------------------------------------------------------
 app = FastAPI(
     title="AutoSR",
-    description=(
-        "Automated Systematic Review — literature search and screening API.\n\n"
-        "Based on the Agent-MAS framework. "
-        "Powered by OpenRouter / qwen3.6-plus and the PubMed eUtils API."
-    ),
+    description="Automated Systematic Review — literature search and screening API.",
     version="1.0.0",
 )
 
@@ -51,25 +52,33 @@ app.add_middleware(
 )
 
 # ---------------------------------------------------------------------------
+# Static files & root page
+# ---------------------------------------------------------------------------
+STATIC_DIR = Path(__file__).parent / "static"
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+@app.get("/", include_in_schema=False)
+def root():
+    return FileResponse(str(STATIC_DIR / "index.html"))
+
+# ---------------------------------------------------------------------------
 # Routers
 # ---------------------------------------------------------------------------
 app.include_router(search.router)
 app.include_router(screening.router)
 
-
 # ---------------------------------------------------------------------------
 # Utility endpoints
 # ---------------------------------------------------------------------------
-
 @app.get("/api/health", tags=["utility"])
-async def health():
+def health():
     return {"status": "ok"}
 
 
 BENCH_PATH = Path(__file__).parent.parent / "data" / "benchmarks" / "bench_review.json"
 
 @app.get("/api/reviews", tags=["utility"], summary="List benchmark systematic reviews")
-async def list_reviews():
+def list_reviews():
     """Return the 10 benchmark systematic reviews (PMID + title + PICO)."""
     if not BENCH_PATH.exists():
         return {"reviews": []}

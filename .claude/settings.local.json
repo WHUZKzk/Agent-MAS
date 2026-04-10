@@ -13,7 +13,9 @@
       "Bash(python3:*)",
       "Bash(pip install:*)",
       "Bash(git add:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(git commit:*)",
+      "Bash(grep -E \"\\\\.\\(json|md|txt|yaml|yml\\)$\")"
     ]
   }
 }

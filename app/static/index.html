@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AutoSR — Automated Systematic Review</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .step-active   { @apply bg-blue-600 text-white; }
+    .step-done     { @apply bg-green-500 text-white; }
+    .step-inactive { @apply bg-gray-200 text-gray-500; }
+
+    .tag { display:inline-block; padding:2px 8px; border-radius:9999px; font-size:.75rem; margin:2px; }
+    .tag-pop  { background:#dbeafe; color:#1d4ed8; }
+    .tag-int  { background:#d1fae5; color:#065f46; }
+    .tag-out  { background:#fef3c7; color:#92400e; }
+
+    .badge-include  { background:#dcfce7; color:#166534; }
+    .badge-exclude  { background:#fee2e2; color:#991b1b; }
+    .badge-uncertain{ background:#fef9c3; color:#854d0e; }
+
+    .eval-yes       { color:#16a34a; font-weight:600; }
+    .eval-no        { color:#dc2626; font-weight:600; }
+    .eval-uncertain { color:#d97706; font-weight:600; }
+
+    textarea { resize:vertical; }
+    .spinner { border:3px solid #e5e7eb; border-top-color:#3b82f6; border-radius:50%;
+               width:24px; height:24px; animation:spin .8s linear infinite; display:inline-block; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    .table-row:hover { background:#f8fafc; }
+    .abstract-short { max-height:3.2em; overflow:hidden; }
+    .abstract-full  { max-height:none; }
+
+    /* pagination */
+    .page-btn { padding:4px 10px; border-radius:6px; border:1px solid #d1d5db; cursor:pointer; font-size:.85rem; }
+    .page-btn:hover { background:#f3f4f6; }
+    .page-btn.active { background:#3b82f6; color:#fff; border-color:#3b82f6; }
+    .page-btn:disabled { opacity:.4; cursor:default; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans text-gray-800">
+
+<!-- ═══════════════════ HEADER ═══════════════════ -->
+<header class="bg-gradient-to-r from-blue-700 to-blue-500 text-white shadow-md">
+  <div class="max-w-screen-xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <span class="text-2xl">🔬</span>
+      <div>
+        <div class="text-xl font-bold tracking-tight">AutoSR</div>
+        <div class="text-xs text-blue-200">Automated Systematic Review · Agent-MAS</div>
+      </div>
+    </div>
+    <!-- Step indicator -->
+    <div class="flex items-center gap-2 text-sm select-none">
+      <span id="step1-badge" class="px-3 py-1 rounded-full font-semibold tag step-active">① PICO 定义</span>
+      <span class="text-blue-300">→</span>
+      <span id="step2-badge" class="px-3 py-1 rounded-full font-semibold tag step-inactive">② 文献检索</span>
+      <span class="text-blue-300">→</span>
+      <span id="step3-badge" class="px-3 py-1 rounded-full font-semibold tag step-inactive">③ 文献筛选</span>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════ LOADING OVERLAY ═══════════════════ -->
+<div id="overlay" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+  <div class="bg-white rounded-2xl shadow-2xl p-8 text-center w-80">
+    <div class="spinner mx-auto mb-4"></div>
+    <div id="overlay-title" class="text-lg font-semibold text-gray-700 mb-1"></div>
+    <div id="overlay-sub"   class="text-sm text-gray-500 mb-3"></div>
+    <div id="overlay-timer" class="text-3xl font-mono font-bold text-blue-600">0:00</div>
+    <div class="text-xs text-gray-400 mt-1">请耐心等待，LLM 推理需要约 2-3 分钟</div>
+  </div>
+</div>
+
+<!-- ═══════════════════ MAIN LAYOUT ═══════════════════ -->
+<div class="max-w-screen-xl mx-auto px-4 py-6 flex gap-5">
+
+  <!-- ─── LEFT SIDEBAR ─── -->
+  <aside class="w-80 shrink-0 space-y-4">
+
+    <!-- PICO Form -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-bold text-gray-700 text-base">PICO 定义</h2>
+        <button onclick="openBenchmarkModal()"
+          class="text-xs text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 px-2 py-1 rounded-lg transition">
+          📂 加载示例
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-blue-700 mb-1">P — Population（研究人群）</label>
+          <textarea id="pico-p" rows="3" placeholder="描述研究目标人群…"
+            class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"></textarea>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-green-700 mb-1">I — Intervention（干预措施）</label>
+          <textarea id="pico-i" rows="3" placeholder="描述干预方案或暴露因素…"
+            class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-300"></textarea>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-yellow-700 mb-1">C — Comparison（对照组）</label>
+          <textarea id="pico-c" rows="2" placeholder="描述对照或比较条件…"
+            class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300"></textarea>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-purple-700 mb-1">O — Outcome（结局指标）</label>
+          <textarea id="pico-o" rows="2" placeholder="描述主要和次要结局指标…"
+            class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search Options -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+      <h2 class="font-bold text-gray-700 text-base mb-3">检索参数</h2>
+      <div class="space-y-3 text-sm">
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-xs text-gray-500">最大检索数量</label>
+            <!-- fetch_all toggle -->
+            <label class="flex items-center gap-1.5 cursor-pointer select-none">
+              <span class="text-xs text-gray-500">检索全部</span>
+              <div class="relative">
+                <input type="checkbox" id="fetch-all" class="sr-only peer" onchange="onFetchAllChange()" />
+                <div class="w-9 h-5 bg-gray-200 rounded-full peer-checked:bg-blue-600 transition-colors"></div>
+                <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
+              </div>
+            </label>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="range" id="retmax" min="50" max="1000" step="50" value="200"
+              oninput="document.getElementById('retmax-val').textContent=this.value"
+              class="flex-1 accent-blue-600" />
+            <span id="retmax-val" class="w-10 text-right font-mono text-blue-700 font-semibold">200</span>
+          </div>
+          <div id="fetch-all-hint" class="hidden mt-1 text-xs text-amber-600 bg-amber-50 rounded-lg px-2 py-1">
+            ⚠ 全量模式：数量上限已忽略，文献数量很多时会较慢
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">起始年份</label>
+            <input type="number" id="min-year" placeholder="如 2015" min="1900" max="2100"
+              class="w-full border border-gray-200 rounded-lg px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-200" />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">截止年份</label>
+            <input type="number" id="max-year" placeholder="如 2024" min="1900" max="2100"
+              class="w-full border border-gray-200 rounded-lg px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-200" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">标题标准数</label>
+            <input type="number" id="num-title" value="3" min="1" max="5"
+              class="w-full border border-gray-200 rounded-lg px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-200" />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">内容标准数</label>
+            <input type="number" id="num-content" value="3" min="1" max="5"
+              class="w-full border border-gray-200 rounded-lg px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-200" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">最大并发请求数</label>
+          <input type="number" id="max-concurrency" value="50" min="1" max="200"
+            class="w-full border border-gray-200 rounded-lg px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-200" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="space-y-2">
+      <button onclick="runSearch()"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl shadow transition flex items-center justify-center gap-2">
+        🔍 <span>检索 PubMed</span>
+      </button>
+      <button id="btn-screen" onclick="runScreen()" disabled
+        class="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl shadow transition flex items-center justify-center gap-2">
+        📋 <span>筛选论文</span>
+      </button>
+      <button onclick="resetAll()"
+        class="w-full border border-gray-300 hover:bg-gray-100 text-gray-600 font-semibold py-2 rounded-xl transition text-sm">
+        🔄 重置
+      </button>
+    </div>
+
+    <!-- Error box -->
+    <div id="error-box" class="hidden bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700"></div>
+
+  </aside>
+
+  <!-- ─── MAIN CONTENT ─── -->
+  <main class="flex-1 min-w-0 space-y-4">
+
+    <!-- Welcome placeholder -->
+    <div id="welcome" class="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center">
+      <div class="text-5xl mb-4">📄</div>
+      <h3 class="text-xl font-bold text-gray-600 mb-2">开始你的系统综述</h3>
+      <p class="text-gray-400 text-sm max-w-md mx-auto">
+        在左侧填写 PICO 要素，点击「检索 PubMed」自动生成检索式并获取候选文献；<br/>
+        检索完成后点击「筛选论文」对每篇文献进行纳入/排除判定。
+      </p>
+    </div>
+
+    <!-- ══ SEARCH RESULTS PANEL ══ -->
+    <div id="search-panel" class="hidden space-y-4">
+
+      <!-- Stats bar -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <div class="flex flex-wrap items-center gap-4 text-sm">
+          <div class="flex items-center gap-2">
+            <span class="text-gray-500">PubMed 总数</span>
+            <span id="stat-total" class="font-bold text-blue-700 text-lg">—</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-gray-500">已获取</span>
+            <span id="stat-retrieved" class="font-bold text-green-700 text-lg">—</span>
+          </div>
+          <div class="ml-auto">
+            <a id="query-link" href="#" target="_blank"
+              class="text-xs text-blue-500 hover:underline break-all hidden">查看 PubMed 查询链接 ↗</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search Terms chips -->
+      <div id="terms-panel" class="hidden bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-semibold text-gray-700 text-sm">生成的检索词</h3>
+          <button onclick="toggleTerms()" id="terms-toggle"
+            class="text-xs text-gray-400 hover:text-gray-600">收起 ▲</button>
+        </div>
+        <div id="terms-content">
+          <div class="mb-2">
+            <span class="text-xs font-semibold text-blue-700 mr-1">人群 / Population</span>
+            <span id="terms-pop"></span>
+          </div>
+          <div class="mb-2">
+            <span class="text-xs font-semibold text-green-700 mr-1">干预 / Intervention</span>
+            <span id="terms-int"></span>
+          </div>
+          <div>
+            <span class="text-xs font-semibold text-yellow-700 mr-1">结局 / Outcome</span>
+            <span id="terms-out"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Papers table -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
+          <h3 class="font-semibold text-gray-700">候选文献列表</h3>
+          <div class="flex items-center gap-3">
+            <input id="paper-search" type="text" placeholder="搜索标题…"
+              oninput="filterPapers()"
+              class="text-sm border border-gray-200 rounded-lg px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 w-44" />
+            <span id="paper-count-label" class="text-xs text-gray-400"></span>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
+              <tr>
+                <th class="px-4 py-3 text-left w-6">#</th>
+                <th class="px-4 py-3 text-left w-24">PMID</th>
+                <th class="px-4 py-3 text-left">标题</th>
+                <th class="px-4 py-3 text-left w-16">年份</th>
+                <th class="px-4 py-3 text-left w-36">期刊</th>
+                <th class="px-4 py-3 text-left">摘要</th>
+              </tr>
+            </thead>
+            <tbody id="papers-tbody"></tbody>
+          </table>
+        </div>
+        <!-- Pagination -->
+        <div id="papers-pagination" class="px-5 py-3 border-t border-gray-100 flex items-center gap-2 flex-wrap"></div>
+      </div>
+    </div>
+
+    <!-- ══ SCREENING RESULTS PANEL ══ -->
+    <div id="screen-panel" class="hidden space-y-4">
+
+      <!-- Streaming progress indicator -->
+      <div id="screen-progress" class="hidden bg-blue-50 rounded-xl border border-blue-100 p-4">
+        <div class="flex items-center gap-3">
+          <div class="spinner" style="border-top-color:#2563eb;"></div>
+          <div class="flex-1">
+            <div id="progress-title" class="font-semibold text-blue-700 text-sm"></div>
+            <div id="progress-sub" class="text-xs text-blue-500 mt-0.5"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary stats -->
+      <div class="grid grid-cols-4 gap-3">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
+          <div id="sum-total" class="text-3xl font-bold text-gray-700">—</div>
+          <div class="text-xs text-gray-500 mt-1">总计</div>
+        </div>
+        <div class="bg-green-50 rounded-xl shadow-sm border border-green-100 p-4 text-center">
+          <div id="sum-include" class="text-3xl font-bold text-green-700">—</div>
+          <div class="text-xs text-green-600 mt-1">纳入 INCLUDE</div>
+        </div>
+        <div class="bg-red-50 rounded-xl shadow-sm border border-red-100 p-4 text-center">
+          <div id="sum-exclude" class="text-3xl font-bold text-red-700">—</div>
+          <div class="text-xs text-red-600 mt-1">排除 EXCLUDE</div>
+        </div>
+        <div class="bg-yellow-50 rounded-xl shadow-sm border border-yellow-100 p-4 text-center">
+          <div id="sum-uncertain" class="text-3xl font-bold text-yellow-700">—</div>
+          <div class="text-xs text-yellow-600 mt-1">不确定 UNCERTAIN</div>
+        </div>
+      </div>
+
+      <!-- Criteria accordion -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <button onclick="toggleCriteria()"
+          class="w-full px-5 py-3 text-left font-semibold text-gray-700 text-sm flex items-center justify-between hover:bg-gray-50">
+          <span>📌 筛选标准</span>
+          <span id="criteria-arrow">▼</span>
+        </button>
+        <div id="criteria-content" class="hidden px-5 pb-4 space-y-3">
+          <div>
+            <div class="text-xs font-semibold text-blue-700 mb-1">标题标准（Title Criteria）</div>
+            <ol id="crit-title" class="list-decimal list-inside space-y-1 text-sm text-gray-600"></ol>
+          </div>
+          <div>
+            <div class="text-xs font-semibold text-green-700 mb-1">内容标准（Content Criteria）</div>
+            <ol id="crit-content" class="list-decimal list-inside space-y-1 text-sm text-gray-600"></ol>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter tabs -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="border-b border-gray-100 px-4 pt-3 flex items-center gap-1">
+          <button class="screen-tab active-tab px-4 py-2 text-sm font-semibold rounded-t-lg" data-filter="ALL"
+            onclick="filterDecisions('ALL', this)">全部</button>
+          <button class="screen-tab px-4 py-2 text-sm font-semibold rounded-t-lg text-gray-500" data-filter="INCLUDE"
+            onclick="filterDecisions('INCLUDE', this)">✅ 纳入</button>
+          <button class="screen-tab px-4 py-2 text-sm font-semibold rounded-t-lg text-gray-500" data-filter="EXCLUDE"
+            onclick="filterDecisions('EXCLUDE', this)">❌ 排除</button>
+          <button class="screen-tab px-4 py-2 text-sm font-semibold rounded-t-lg text-gray-500" data-filter="UNCERTAIN"
+            onclick="filterDecisions('UNCERTAIN', this)">❓ 不确定</button>
+          <div class="ml-auto pb-1">
+            <button onclick="exportCSV()"
+              class="text-xs border border-gray-300 hover:bg-gray-100 px-3 py-1 rounded-lg text-gray-600 transition">
+              ⬇ 导出 CSV
+            </button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50 text-xs text-gray-500 uppercase">
+              <tr id="decisions-header"></tr>
+            </thead>
+            <tbody id="decisions-tbody"></tbody>
+          </table>
+        </div>
+        <div id="decisions-pagination" class="px-5 py-3 border-t border-gray-100 flex items-center gap-2 flex-wrap"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════════════ BENCHMARK MODAL ═══════════════════ -->
+<div id="bench-modal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+  <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg mx-4">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-bold text-gray-700">加载 Benchmark 示例</h3>
+      <button onclick="closeBenchmarkModal()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+    </div>
+    <div id="bench-list" class="space-y-2 max-h-96 overflow-y-auto pr-1">
+      <div class="text-gray-400 text-sm text-center py-4">加载中…</div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .active-tab { background:#eff6ff; color:#2563eb; border-bottom:2px solid #2563eb; }
+  .screen-tab { transition:background .15s; }
+  .screen-tab:hover:not(.active-tab) { background:#f9fafb; }
+</style>
+
+<script>
+// ─────────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────────
+let allPapers      = [];
+let filteredPapers = [];
+let allDecisions   = [];
+let filteredDecisions = [];
+let allCriteria    = [];
+let currentPico    = {};
+
+let paperPage   = 0;
+let decPage     = 0;
+const PAGE_SIZE = 50;
+
+// ─────────────────────────────────────────────────
+// Utilities
+// ─────────────────────────────────────────────────
+function showError(msg) {
+  const box = document.getElementById('error-box');
+  box.textContent = '⚠ ' + msg;
+  box.classList.remove('hidden');
+}
+function clearError() {
+  document.getElementById('error-box').classList.add('hidden');
+}
+
+let timerInterval = null;
+function showOverlay(title, sub) {
+  document.getElementById('overlay-title').textContent = title;
+  document.getElementById('overlay-sub').textContent   = sub;
+  document.getElementById('overlay-timer').textContent = '0:00';
+  document.getElementById('overlay').classList.remove('hidden');
+  const start = Date.now();
+  timerInterval = setInterval(() => {
+    const s = Math.floor((Date.now() - start) / 1000);
+    document.getElementById('overlay-timer').textContent =
+      `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+  }, 1000);
+}
+function hideOverlay() {
+  document.getElementById('overlay').classList.add('hidden');
+  clearInterval(timerInterval);
+}
+
+function setStep(n) {
+  const labels = ['① PICO 定义','② 文献检索','③ 文献筛选'];
+  ['step1-badge','step2-badge','step3-badge'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.textContent = labels[i];
+    el.className = 'px-3 py-1 rounded-full font-semibold tag ' +
+      (i+1 < n ? 'step-done' : i+1 === n ? 'step-active' : 'step-inactive');
+  });
+}
+
+function getPico() {
+  return {
+    P: document.getElementById('pico-p').value.trim(),
+    I: document.getElementById('pico-i').value.trim(),
+    C: document.getElementById('pico-c').value.trim(),
+    O: document.getElementById('pico-o').value.trim(),
+  };
+}
+
+// ─────────────────────────────────────────────────
+// fetch_all toggle
+// ─────────────────────────────────────────────────
+function onFetchAllChange() {
+  const on = document.getElementById('fetch-all').checked;
+  document.getElementById('retmax').disabled = on;
+  document.getElementById('fetch-all-hint').classList.toggle('hidden', !on);
+}
+
+// ─────────────────────────────────────────────────
+// Search
+// ─────────────────────────────────────────────────
+async function runSearch() {
+  clearError();
+  const pico = getPico();
+  if (!pico.P || !pico.I || !pico.O) {
+    showError('请至少填写 P（人群）、I（干预）和 O（结局）字段');
+    return;
+  }
+  currentPico = pico;
+
+  const fetchAll = document.getElementById('fetch-all').checked;
+  const overlayHint = fetchAll
+    ? '全量模式：分页获取所有命中文献，数量多时耗时较长'
+    : '生成检索式 → 获取参考文献 → 精炼词条 → 执行检索';
+  showOverlay('正在检索 PubMed…', overlayHint);
+  setStep(2);
+
+  try {
+    const minYear = parseInt(document.getElementById('min-year').value) || null;
+    const maxYear = parseInt(document.getElementById('max-year').value) || null;
+    const body = {
+      pico,
+      retmax: +document.getElementById('retmax').value,
+      fetch_all: fetchAll,
+      ...(minYear ? { min_year: minYear } : {}),
+      ...(maxYear ? { max_year: maxYear } : {}),
+    };
+    const resp = await fetch('/api/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.detail || resp.statusText);
+    }
+    const data = await resp.json();
+    hideOverlay();
+    renderSearchResults(data);
+    document.getElementById('btn-screen').disabled = false;
+  } catch(e) {
+    hideOverlay();
+    showError('检索失败：' + e.message);
+    setStep(1);
+  }
+}
+
+function renderSearchResults(data) {
+  document.getElementById('welcome').classList.add('hidden');
+  document.getElementById('screen-panel').classList.add('hidden');
+  document.getElementById('search-panel').classList.remove('hidden');
+
+  // Stats
+  document.getElementById('stat-total').textContent = data.total_count.toLocaleString();
+  document.getElementById('stat-retrieved').textContent = data.retrieved_count.toLocaleString();
+
+  // Query link
+  const ql = document.getElementById('query-link');
+  if (data.query_url) {
+    ql.href = data.query_url;
+    ql.classList.remove('hidden');
+  }
+
+  // Terms
+  const st = data.search_terms;
+  if ((st.populations||[]).length || (st.interventions||[]).length || (st.outcomes||[]).length) {
+    document.getElementById('terms-panel').classList.remove('hidden');
+    renderTags('terms-pop', st.populations  || [], 'tag-pop');
+    renderTags('terms-int', st.interventions || [], 'tag-int');
+    renderTags('terms-out', st.outcomes     || [], 'tag-out');
+  }
+
+  // Papers
+  allPapers = data.papers || [];
+  filteredPapers = [...allPapers];
+  paperPage = 0;
+  renderPapersPage();
+}
+
+function renderTags(containerId, items, cls) {
+  document.getElementById(containerId).innerHTML =
+    items.map(t => `<span class="tag ${cls}">${escHtml(t)}</span>`).join('');
+}
+
+function filterPapers() {
+  const q = document.getElementById('paper-search').value.toLowerCase();
+  filteredPapers = q
+    ? allPapers.filter(p => (p.title||'').toLowerCase().includes(q))
+    : [...allPapers];
+  paperPage = 0;
+  renderPapersPage();
+}
+
+function renderPapersPage() {
+  const start = paperPage * PAGE_SIZE;
+  const page  = filteredPapers.slice(start, start + PAGE_SIZE);
+  const total = filteredPapers.length;
+  document.getElementById('paper-count-label').textContent =
+    `显示 ${start+1}–${Math.min(start+PAGE_SIZE,total)} / ${total} 篇`;
+
+  const tbody = document.getElementById('papers-tbody');
+  tbody.innerHTML = page.map((p, idx) => {
+    const abs = escHtml(p.abstract || '');
+    const pid = `abs-${start+idx}`;
+    return `<tr class="table-row border-t border-gray-50">
+      <td class="px-4 py-3 text-gray-400 text-xs">${start+idx+1}</td>
+      <td class="px-4 py-3">
+        <a href="https://pubmed.ncbi.nlm.nih.gov/${p.pmid}/" target="_blank"
+           class="text-blue-600 hover:underline font-mono text-xs">${p.pmid}</a>
+      </td>
+      <td class="px-4 py-3 font-medium text-gray-800 leading-snug">${escHtml(p.title||'')}</td>
+      <td class="px-4 py-3 text-gray-500 text-xs">${p.year||''}</td>
+      <td class="px-4 py-3 text-gray-500 text-xs leading-tight">${escHtml((p.journal||'').substring(0,40))}</td>
+      <td class="px-4 py-3 text-gray-500 text-xs max-w-xs">
+        <div id="${pid}" class="abstract-short">${abs.substring(0,180)}…</div>
+        ${abs.length > 180 ? `<button onclick="toggleAbstract('${pid}')" class="text-blue-500 text-xs hover:underline mt-1">展开</button>` : ''}
+      </td>
+    </tr>`;
+  }).join('');
+
+  renderPagination('papers-pagination', paperPage, Math.ceil(total/PAGE_SIZE), p => { paperPage=p; renderPapersPage(); });
+}
+
+function toggleAbstract(id) {
+  const el = document.getElementById(id);
+  const btn = el.nextElementSibling;
+  if (el.classList.contains('abstract-short')) {
+    el.classList.remove('abstract-short');
+    el.classList.add('abstract-full');
+    el.textContent = el.textContent.replace(/…$/, '');
+    if(btn) btn.textContent = '收起';
+  } else {
+    el.classList.add('abstract-short');
+    el.classList.remove('abstract-full');
+    if(btn) btn.textContent = '展开';
+  }
+}
+
+// ─────────────────────────────────────────────────
+// Screening (SSE streaming)
+// ─────────────────────────────────────────────────
+async function runScreen() {
+  if (!allPapers.length) { showError('请先执行文献检索'); return; }
+  clearError();
+  setStep(3);
+
+  // Reset screening state
+  allDecisions = [];
+  filteredDecisions = [];
+  allCriteria = [];
+  decPage = 0;
+
+  // Show panel immediately
+  document.getElementById('screen-panel').classList.remove('hidden');
+  document.getElementById('screen-panel').scrollIntoView({ behavior: 'smooth' });
+
+  // Reset UI
+  document.getElementById('sum-total').textContent     = '…';
+  document.getElementById('sum-include').textContent   = '…';
+  document.getElementById('sum-exclude').textContent   = '…';
+  document.getElementById('sum-uncertain').textContent = '…';
+  document.getElementById('crit-title').innerHTML      = '';
+  document.getElementById('crit-content').innerHTML    = '';
+  document.getElementById('criteria-content').classList.add('hidden');
+  document.getElementById('criteria-arrow').textContent = '▼';
+  document.getElementById('decisions-header').innerHTML = '';
+  document.getElementById('decisions-tbody').innerHTML  = '';
+  document.getElementById('decisions-pagination').innerHTML = '';
+
+  // Show progress bar
+  const progTitle = document.getElementById('progress-title');
+  const progSub   = document.getElementById('progress-sub');
+  progTitle.textContent = '正在生成筛选标准…';
+  progSub.textContent   = `共 ${allPapers.length} 篇论文待筛选`;
+  document.getElementById('screen-progress').classList.remove('hidden');
+
+  const papers = allPapers.map(p => ({
+    pmid: p.pmid, title: p.title, abstract: p.abstract,
+    authors: p.authors, year: p.year, journal: p.journal,
+  }));
+
+  try {
+    const resp = await fetch('/api/screen/stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pico: currentPico,
+        papers,
+        num_title_criteria:   +document.getElementById('num-title').value,
+        num_content_criteria: +document.getElementById('num-content').value,
+        max_concurrency:      +document.getElementById('max-concurrency').value,
+      }),
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({ detail: resp.statusText }));
+      throw new Error(err.detail || resp.statusText);
+    }
+
+    const reader  = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      // Parse complete SSE lines
+      const lines = buffer.split('\n');
+      buffer = lines.pop();  // keep incomplete trailing line
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const json = line.slice(6).trim();
+        if (!json) continue;
+        try {
+          handleScreenEvent(JSON.parse(json));
+        } catch(e) {
+          console.warn('SSE parse error:', line, e);
+        }
+      }
+    }
+  } catch(e) {
+    document.getElementById('screen-progress').classList.add('hidden');
+    showError('筛选失败：' + e.message);
+    setStep(2);
+  }
+}
+
+function handleScreenEvent(event) {
+  const total = allPapers.length;
+
+  if (event.type === 'criteria') {
+    const data = event.data;
+    const tc = data.title_criteria   || [];
+    const cc = data.content_criteria || [];
+    allCriteria = [...tc, ...cc];
+
+    document.getElementById('crit-title').innerHTML   = tc.map(c=>`<li>${escHtml(c)}</li>`).join('');
+    document.getElementById('crit-content').innerHTML = cc.map(c=>`<li>${escHtml(c)}</li>`).join('');
+
+    // Expand criteria accordion
+    document.getElementById('criteria-content').classList.remove('hidden');
+    document.getElementById('criteria-arrow').textContent = '▲';
+
+    // Build decisions table header
+    document.getElementById('decisions-header').innerHTML = `
+      <th class="px-4 py-3 text-left w-20">PMID</th>
+      <th class="px-4 py-3 text-left">标题</th>
+      <th class="px-4 py-3 text-left w-28">决策</th>
+      ${allCriteria.map((c,i)=>`<th class="px-3 py-3 text-center w-12" title="${escHtml(c)}">C${i+1}</th>`).join('')}
+    `;
+
+    document.getElementById('progress-title').textContent = '第一阶段：题目筛选中…';
+    document.getElementById('progress-sub').textContent   = `共 ${total} 篇论文`;
+
+  } else if (event.type === 'phase1_done') {
+    const { passed } = event.data;
+    document.getElementById('progress-title').textContent = '第二阶段：摘要筛选中…';
+    document.getElementById('progress-sub').textContent =
+      `题目筛选完成，${passed}/${total} 篇进入摘要筛选`;
+
+  } else if (event.type === 'paper_done') {
+    const d = event.data;
+    allDecisions.push(d);
+
+    document.getElementById('progress-sub').textContent =
+      `已完成 ${allDecisions.length} / ${total} 篇`;
+
+    // Append row immediately
+    const badgeCls = d.decision==='INCLUDE'  ? 'badge-include'
+                   : d.decision==='EXCLUDE'  ? 'badge-exclude' : 'badge-uncertain';
+    const badgeTxt = d.decision==='INCLUDE'  ? '✅ 纳入'
+                   : d.decision==='EXCLUDE'  ? '❌ 排除' : '❓ 不确定';
+    const evals = (d.evaluations||[]).map(e => {
+      if (e === 'SKIPPED') return `<td class="px-3 py-3 text-center"><span class="text-gray-300" title="题目阶段已排除，跳过摘要评估">—</span></td>`;
+      const cls = e==='YES' ? 'eval-yes' : e==='NO' ? 'eval-no' : 'eval-uncertain';
+      const sym = e==='YES' ? '●' : e==='NO' ? '●' : '◐';
+      return `<td class="px-3 py-3 text-center"><span class="${cls}" title="${e}">${sym}</span></td>`;
+    }).join('');
+
+    const tr = document.createElement('tr');
+    tr.className = 'table-row border-t border-gray-50';
+    tr.dataset.decision = d.decision;
+    tr.innerHTML = `
+      <td class="px-4 py-3">
+        <a href="https://pubmed.ncbi.nlm.nih.gov/${d.pmid}/" target="_blank"
+           class="text-blue-600 hover:underline font-mono text-xs">${d.pmid}</a>
+      </td>
+      <td class="px-4 py-3 text-sm text-gray-700 leading-snug">${escHtml(d.title||'')}</td>
+      <td class="px-4 py-3"><span class="tag ${badgeCls} font-semibold">${badgeTxt}</span></td>
+      ${evals}
+    `;
+    document.getElementById('decisions-tbody').appendChild(tr);
+
+  } else if (event.type === 'summary') {
+    const s = event.data;
+    document.getElementById('sum-total').textContent     = s.total;
+    document.getElementById('sum-include').textContent   = s.included;
+    document.getElementById('sum-exclude').textContent   = s.excluded;
+    document.getElementById('sum-uncertain').textContent = s.uncertain;
+
+  } else if (event.type === 'done') {
+    document.getElementById('screen-progress').classList.add('hidden');
+    // Rebuild paginated view (rows already rendered; this adds pagination controls)
+    filteredDecisions = [...allDecisions];
+    decPage = 0;
+    renderDecisionsPage();
+
+  } else if (event.type === 'error') {
+    document.getElementById('screen-progress').classList.add('hidden');
+    showError('筛选出错：' + event.data);
+  }
+}
+
+function filterDecisions(filter, btn) {
+  document.querySelectorAll('.screen-tab').forEach(b => b.classList.remove('active-tab'));
+  btn.classList.add('active-tab');
+  filteredDecisions = filter === 'ALL' ? [...allDecisions]
+    : allDecisions.filter(d => d.decision === filter);
+  decPage = 0;
+  renderDecisionsPage();
+}
+
+function renderDecisionsPage() {
+  const start = decPage * PAGE_SIZE;
+  const page  = filteredDecisions.slice(start, start + PAGE_SIZE);
+
+  const tbody = document.getElementById('decisions-tbody');
+  tbody.innerHTML = page.map(d => {
+    const badgeCls = d.decision==='INCLUDE' ? 'badge-include'
+                   : d.decision==='EXCLUDE' ? 'badge-exclude' : 'badge-uncertain';
+    const badgeTxt = d.decision==='INCLUDE' ? '✅ 纳入'
+                   : d.decision==='EXCLUDE' ? '❌ 排除' : '❓ 不确定';
+    const evals = (d.evaluations||[]).map(e => {
+      if (e === 'SKIPPED') return `<td class="px-3 py-3 text-center"><span class="text-gray-300" title="题目阶段已排除，跳过摘要评估">—</span></td>`;
+      const cls = e==='YES' ? 'eval-yes' : e==='NO' ? 'eval-no' : 'eval-uncertain';
+      const sym = e==='YES' ? '●' : e==='NO' ? '●' : '◐';
+      return `<td class="px-3 py-3 text-center"><span class="${cls}" title="${e}">${sym}</span></td>`;
+    }).join('');
+    return `<tr class="table-row border-t border-gray-50">
+      <td class="px-4 py-3">
+        <a href="https://pubmed.ncbi.nlm.nih.gov/${d.pmid}/" target="_blank"
+           class="text-blue-600 hover:underline font-mono text-xs">${d.pmid}</a>
+      </td>
+      <td class="px-4 py-3 text-sm text-gray-700 leading-snug">${escHtml(d.title||'')}</td>
+      <td class="px-4 py-3">
+        <span class="tag ${badgeCls} font-semibold">${badgeTxt}</span>
+      </td>
+      ${evals}
+    </tr>`;
+  }).join('');
+
+  renderPagination('decisions-pagination', decPage, Math.ceil(filteredDecisions.length/PAGE_SIZE),
+    p => { decPage=p; renderDecisionsPage(); });
+}
+
+// ─────────────────────────────────────────────────
+// Pagination
+// ─────────────────────────────────────────────────
+function renderPagination(containerId, current, totalPages, onPage) {
+  const el = document.getElementById(containerId);
+  if (totalPages <= 1) { el.innerHTML=''; return; }
+  let html = `<button class="page-btn" ${current===0?'disabled':''} onclick="(${onPage.toString()})(${current-1})">← 上一页</button>`;
+  for (let i=0; i<totalPages; i++) {
+    if (totalPages <= 7 || Math.abs(i-current) <= 2 || i===0 || i===totalPages-1) {
+      html += `<button class="page-btn ${i===current?'active':''}" onclick="(${onPage.toString()})(${i})">${i+1}</button>`;
+    } else if (Math.abs(i-current)===3) {
+      html += `<span class="text-gray-400 px-1">…</span>`;
+    }
+  }
+  html += `<button class="page-btn" ${current===totalPages-1?'disabled':''} onclick="(${onPage.toString()})(${current+1})">下一页 →</button>`;
+  html += `<span class="text-xs text-gray-400 ml-2">共 ${totalPages} 页</span>`;
+  el.innerHTML = html;
+}
+
+// ─────────────────────────────────────────────────
+// UI toggles
+// ─────────────────────────────────────────────────
+function toggleTerms() {
+  const c = document.getElementById('terms-content');
+  const b = document.getElementById('terms-toggle');
+  const hidden = c.classList.toggle('hidden');
+  b.textContent = hidden ? '展开 ▼' : '收起 ▲';
+}
+function toggleCriteria() {
+  const c = document.getElementById('criteria-content');
+  const a = document.getElementById('criteria-arrow');
+  const hidden = c.classList.toggle('hidden');
+  a.textContent = hidden ? '▼' : '▲';
+}
+
+// ─────────────────────────────────────────────────
+// Reset
+// ─────────────────────────────────────────────────
+function resetAll() {
+  allPapers=[];filteredPapers=[];allDecisions=[];filteredDecisions=[];allCriteria=[];currentPico={};
+  ['pico-p','pico-i','pico-c','pico-o'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('min-year').value='';
+  document.getElementById('max-year').value='';
+  document.getElementById('fetch-all').checked=false;
+  onFetchAllChange();
+  document.getElementById('search-panel').classList.add('hidden');
+  document.getElementById('screen-panel').classList.add('hidden');
+  document.getElementById('screen-progress').classList.add('hidden');
+  document.getElementById('welcome').classList.remove('hidden');
+  document.getElementById('btn-screen').disabled=true;
+  clearError();
+  setStep(1);
+}
+
+// ─────────────────────────────────────────────────
+// CSV Export
+// ─────────────────────────────────────────────────
+function exportCSV() {
+  if (!allDecisions.length) return;
+  const cols = ['PMID','Title','Decision',
+    ...allCriteria.map((_,i)=>`C${i+1}`)];
+  const rows = allDecisions.map(d =>
+    [d.pmid, `"${(d.title||'').replace(/"/g,'""')}"`, d.decision, ...(d.evaluations||[])].join(',')
+  );
+  const csv = [cols.join(','), ...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
+  a.download = 'autosr_screening_results.csv';
+  a.click();
+}
+
+// ─────────────────────────────────────────────────
+// Benchmark modal
+// ─────────────────────────────────────────────────
+async function openBenchmarkModal() {
+  document.getElementById('bench-modal').classList.remove('hidden');
+  const listEl = document.getElementById('bench-list');
+  try {
+    const resp = await fetch('/api/reviews');
+    const data = await resp.json();
+    listEl.innerHTML = data.reviews.map(r => `
+      <div class="border border-gray-100 rounded-xl p-3 hover:bg-blue-50 cursor-pointer transition"
+           onclick="loadBenchmark(${JSON.stringify(JSON.stringify(r)).slice(1,-1)})">
+        <div class="text-xs text-gray-400 font-mono mb-1">PMID: ${r.pmid}</div>
+        <div class="text-sm font-semibold text-gray-700 leading-snug">${escHtml(r.title)}</div>
+      </div>
+    `).join('');
+  } catch(e) {
+    listEl.innerHTML = '<div class="text-red-500 text-sm">加载失败</div>';
+  }
+}
+function closeBenchmarkModal() {
+  document.getElementById('bench-modal').classList.add('hidden');
+}
+function loadBenchmark(jsonStr) {
+  const r = JSON.parse(jsonStr);
+  document.getElementById('pico-p').value = r.pico.P || '';
+  document.getElementById('pico-i').value = r.pico.I || '';
+  document.getElementById('pico-c').value = r.pico.C || '';
+  document.getElementById('pico-o').value = r.pico.O || '';
+  closeBenchmarkModal();
+}
+
+// ─────────────────────────────────────────────────
+// Escape HTML
+// ─────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s||'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+// Close modal on backdrop click
+document.getElementById('bench-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeBenchmarkModal();
+});
+</script>
+</body>
+</html>

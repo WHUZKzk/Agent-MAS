@@ -16,7 +16,7 @@ Pipeline:
 import json
 import re
 import logging
-from typing import Optional
+from typing import Optional, Tuple
 
 from autosr.agents.base_agent import BaseAgent
 from autosr.schemas.models import PICODefinition, Paper, SearchResult, SearchTerms
@@ -77,7 +77,14 @@ class SearchAgent(BaseAgent):
     # Public entry point
     # ------------------------------------------------------------------
 
-    def run(self, pico: PICODefinition, retmax: int = 1000) -> SearchResult:
+    def run(
+        self,
+        pico: PICODefinition,
+        retmax: int = 1000,
+        min_year: Optional[int] = None,
+        max_year: Optional[int] = None,
+        fetch_all: bool = False,
+    ) -> SearchResult:
         self.reset()
         pico_dict = {"P": pico.P, "I": pico.I, "C": pico.C, "O": pico.O}
 
@@ -114,6 +121,9 @@ class SearchAgent(BaseAgent):
             self._pubmed_search,
             search_terms,
             retmax,
+            min_year,
+            max_year,
+            fetch_all,
         )
 
         # Step 5 – fetch paper metadata
@@ -195,7 +205,14 @@ class SearchAgent(BaseAgent):
             outcomes=outcomes,
         )
 
-    def _pubmed_search(self, search_terms: SearchTerms, retmax: int):
+    def _pubmed_search(
+        self,
+        search_terms: SearchTerms,
+        retmax: int,
+        min_year: Optional[int] = None,
+        max_year: Optional[int] = None,
+        fetch_all: bool = False,
+    ):
         keyword_map = {}
         if search_terms.populations:
             keyword_map["population"] = search_terms.populations
@@ -204,8 +221,18 @@ class SearchAgent(BaseAgent):
         if search_terms.outcomes:
             keyword_map["outcome"] = search_terms.outcomes
 
-        inputs = {"keyword_map": keyword_map, "page_size": retmax}
-        pmid_list, query_url, total_count = self._wrapper.search(inputs)
+        inputs: dict = {"keyword_map": keyword_map, "page_size": retmax}
+        if min_year:
+            inputs["min_date"] = str(min_year)
+        if max_year:
+            inputs["max_date"] = str(max_year)
+
+        if fetch_all:
+            logger.info("fetch_all=True: retrieving all PMIDs via pagination")
+            pmid_list, query_url, total_count = self._wrapper.search_all(inputs)
+        else:
+            pmid_list, query_url, total_count = self._wrapper.search(inputs)
+
         return pmid_list, query_url, total_count
 
     def _fetch_papers(self, pmid_list: list) -> list:
