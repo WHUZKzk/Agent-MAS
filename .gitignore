@@ -32,3 +32,4 @@ Thumbs.db
 # Data outputs (keep benchmarks, ignore generated results)
 data/results/
 data/checkpoints/
+data/uploads/

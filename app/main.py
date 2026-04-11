@@ -24,7 +24,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.routers import search, screening
+from app.routers import search, screening, extraction
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -40,7 +40,7 @@ logger = logging.getLogger("autosr")
 # ---------------------------------------------------------------------------
 app = FastAPI(
     title="AutoSR",
-    description="Automated Systematic Review — literature search and screening API.",
+    description="Automated Systematic Review — literature search, screening, and data extraction API.",
     version="1.0.0",
 )
 
@@ -69,6 +69,7 @@ def root():
 # ---------------------------------------------------------------------------
 app.include_router(search.router)
 app.include_router(screening.router)
+app.include_router(extraction.router)
 
 # ---------------------------------------------------------------------------
 # Utility endpoints

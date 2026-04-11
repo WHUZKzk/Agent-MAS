@@ -15,7 +15,11 @@
       "Bash(git add:*)",
       "Bash(git rm:*)",
       "Bash(git commit:*)",
-      "Bash(grep -E \"\\\\.\\(json|md|txt|yaml|yml\\)$\")"
+      "Bash(grep -E \"\\\\.\\(json|md|txt|yaml|yml\\)$\")",
+      "Skill(update-config)",
+      "Read(//Users/**)",
+      "Read(//c/Users/zhu ke/**)",
+      "Bash(wc:*)"
     ]
   }
 }
