@@ -33,3 +33,10 @@ Thumbs.db
 data/results/
 data/checkpoints/
 data/uploads/
+
+# Large files / models
+docling_models/
+*.pdf
+
+# Claude Code local settings
+.claude/

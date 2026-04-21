@@ -2,8 +2,8 @@
 LLM tool layer for AutoSR.
 
 Adapted from TrialMind's llm.py + llm_utils/openai.py + llm_utils/openai_async.py.
-Key change: OpenAI → OpenRouter (api_key + base_url), single model qwen/qwen3.6-plus.
-API surface is identical to TrialMind so the rest of the codebase stays familiar.
+Key change: OpenAI → OpenRouter with model-based API key routing.
+API surface remains identical to TrialMind so the rest of the codebase stays familiar.
 """
 
 import asyncio
@@ -14,6 +14,7 @@ import tenacity
 from openai import OpenAI, AsyncOpenAI
 from typing import List, Optional
 import logging
+from functools import lru_cache
 
 from configs.settings import settings
 
@@ -23,23 +24,98 @@ logger = logging.getLogger(__name__)
 # Clients
 # ---------------------------------------------------------------------------
 
-_client = OpenAI(
-    api_key=settings.openrouter_api_key,
-    base_url=settings.openrouter_base_url,
-    http_client=httpx.Client(
-        limits=httpx.Limits(max_connections=1000, max_keepalive_connections=100)
-    ),
-)
-
-_async_client = AsyncOpenAI(
-    api_key=settings.openrouter_api_key,
-    base_url=settings.openrouter_base_url,
-    http_client=httpx.AsyncClient(
-        limits=httpx.Limits(max_connections=1000, max_keepalive_connections=100)
-    ),
-)
-
 _MODEL = settings.model_name
+_WARNED_KEY2_MISSING = False
+
+
+def _model_matches_pattern(model_name: str, pattern: str) -> bool:
+    model = (model_name or "").strip().lower()
+    pat = (pattern or "").strip().lower()
+    if not model or not pat:
+        return False
+    if pat.endswith("*"):
+        return model.startswith(pat[:-1])
+    return model == pat
+
+
+def _should_use_key2(model_name: str) -> bool:
+    return any(
+        _model_matches_pattern(model_name, pattern)
+        for pattern in settings.openrouter_api_key2_model_patterns
+    )
+
+
+def get_openrouter_key_alias_for_model(model: Optional[str] = None) -> str:
+    model_name = model or _MODEL
+    if _should_use_key2(model_name):
+        if settings.openrouter_api_key2:
+            return "key2"
+        return "key1"
+    return "key1"
+
+
+def get_openrouter_api_key_for_model(model: Optional[str] = None) -> str:
+    alias = get_openrouter_key_alias_for_model(model=model)
+    if alias == "key2":
+        return settings.openrouter_api_key2
+    return settings.openrouter_api_key1
+
+
+def _get_proxy_for_alias(alias: str) -> Optional[str]:
+    """Return the proxy URL for a given key alias, or None for direct connection."""
+    if alias == "key2":
+        return settings.proxy_url_key2 or None
+    return settings.proxy_url_key1 or None
+
+
+@lru_cache(maxsize=4)
+def _get_sync_client(api_key: str, proxy: Optional[str] = None) -> OpenAI:
+    return OpenAI(
+        api_key=api_key,
+        base_url=settings.openrouter_base_url,
+        http_client=httpx.Client(
+            proxy=proxy,
+            limits=httpx.Limits(max_connections=1000, max_keepalive_connections=100),
+        ),
+    )
+
+
+@lru_cache(maxsize=4)
+def _get_async_client(api_key: str, proxy: Optional[str] = None) -> AsyncOpenAI:
+    return AsyncOpenAI(
+        api_key=api_key,
+        base_url=settings.openrouter_base_url,
+        http_client=httpx.AsyncClient(
+            proxy=proxy,
+            limits=httpx.Limits(max_connections=1000, max_keepalive_connections=100),
+        ),
+    )
+
+
+def _resolve_clients(model: Optional[str] = None) -> tuple[OpenAI, AsyncOpenAI]:
+    global _WARNED_KEY2_MISSING
+
+    model_name = model or _MODEL
+    alias = get_openrouter_key_alias_for_model(model_name)
+    api_key = get_openrouter_api_key_for_model(model_name)
+
+    if not api_key:
+        raise ValueError(
+            f"OpenRouter API key for {alias} is empty. "
+            "Please configure OPENROUTER_API_KEY1/OPENROUTER_API_KEY2."
+        )
+
+    if _should_use_key2(model_name) and alias == "key1" and not _WARNED_KEY2_MISSING:
+        logger.warning(
+            "Model '%s' matched OPENROUTER_API_KEY2_MODEL_PATTERNS, "
+            "but OPENROUTER_API_KEY2 is empty. Falling back to KEY1.",
+            model_name,
+        )
+        _WARNED_KEY2_MISSING = True
+
+    proxy = _get_proxy_for_alias(alias)
+    logger.debug("Resolved client: alias=%s  proxy=%s", alias, proxy or "(direct)")
+    return _get_sync_client(api_key, proxy), _get_async_client(api_key, proxy)
 
 
 # ---------------------------------------------------------------------------
@@ -52,8 +128,10 @@ _MODEL = settings.model_name
     reraise=True,
 )
 def _call_sync(messages: list, temperature: float = 0.0, model: str = None, **kwargs):
-    return _client.chat.completions.create(
-        model=model or _MODEL,
+    model_name = model or _MODEL
+    sync_client, _ = _resolve_clients(model_name)
+    return sync_client.chat.completions.create(
+        model=model_name,
         messages=messages,
         temperature=temperature,
         **kwargs,
@@ -66,8 +144,10 @@ def _call_sync(messages: list, temperature: float = 0.0, model: str = None, **kw
     reraise=True,
 )
 async def _call_async(messages: list, temperature: float = 0.0, model: str = None, **kwargs):
-    return await _async_client.chat.completions.create(
-        model=model or _MODEL,
+    model_name = model or _MODEL
+    _, async_client = _resolve_clients(model_name)
+    return await async_client.chat.completions.create(
+        model=model_name,
         messages=messages,
         temperature=temperature,
         **kwargs,

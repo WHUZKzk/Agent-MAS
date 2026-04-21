@@ -1,20 +1,23 @@
 """
-AutoSR pipeline — chains SearchAgent and ScreeningAgent for a complete run.
+AutoSR pipeline — chains SearchAgent and ScreeningAgentV2 for a complete run.
 """
 
 import logging
 from typing import Optional
 
 from autosr.agents.search_agent import SearchAgent
-from autosr.agents.screening_agent import ScreeningAgent
-from autosr.schemas.models import PICODefinition, SearchResult, ScreeningResult
+from autosr.agents.screening_agent_v2 import ScreeningAgentV2
+from autosr.schemas.models import (
+    PICODefinition, StudyDesignFilter,
+    SearchResult, ScreeningResultV2,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class AutoSRPipeline:
     """
-    Run the full AutoSR pipeline: Search → Screen.
+    Run the full AutoSR pipeline: Search → Screen (Stages 0-2).
 
     Usage::
 
@@ -24,16 +27,15 @@ class AutoSRPipeline:
 
     def __init__(self):
         self.search_agent = SearchAgent()
-        self.screening_agent = ScreeningAgent()
+        self.screening_agent = ScreeningAgentV2()
 
     def run(
         self,
         pico: PICODefinition,
         retmax: int = 1000,
-        num_title_criteria: int = 3,
-        num_content_criteria: int = 3,
-        batch_size: int = 10,
-    ) -> tuple[SearchResult, ScreeningResult]:
+        study_design_filter: StudyDesignFilter = StudyDesignFilter.BOTH,
+        max_concurrency: int = 50,
+    ) -> tuple[SearchResult, ScreeningResultV2]:
         logger.info("=== AutoSR Pipeline START ===")
 
         search_result = self.search_agent.run(pico, retmax=retmax)
@@ -42,15 +44,13 @@ class AutoSRPipeline:
         screen_result = self.screening_agent.run(
             papers=search_result.papers,
             pico=pico,
-            num_title_criteria=num_title_criteria,
-            num_content_criteria=num_content_criteria,
-            batch_size=batch_size,
+            study_design_filter=study_design_filter,
+            max_concurrency=max_concurrency,
         )
         logger.info(
-            "Screening complete: %d included / %d excluded / %d uncertain",
-            screen_result.summary.included,
-            screen_result.summary.excluded,
-            screen_result.summary.uncertain,
+            "Screening complete: %d included / %d excluded",
+            screen_result.summary.final_included,
+            screen_result.summary.final_excluded,
         )
 
         logger.info("=== AutoSR Pipeline DONE ===")

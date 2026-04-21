@@ -330,7 +330,7 @@ class PubmedAPIWrapper:
             if resp.status_code != 200:
                 logger.error("PubMed search error: %s", resp.text)
                 return [], url, 0
-            data = json.loads(resp.text)
+            data = json.loads(resp.text, strict=False)
             pmid_list = data["esearchresult"]["idlist"]
             total_count = int(data["esearchresult"]["count"])
             pmid_list = list(set(pmid_list))
@@ -365,7 +365,7 @@ class PubmedAPIWrapper:
             if resp.status_code != 200:
                 logger.error("PubMed search_all error: %s", resp.text)
                 return [], query_url, 0
-            data = json.loads(resp.text)
+            data = json.loads(resp.text, strict=False)
             total_count = int(data["esearchresult"]["count"])
             all_pmids: list = list(data["esearchresult"]["idlist"])
             logger.info(
@@ -377,20 +377,27 @@ class PubmedAPIWrapper:
             for retstart in range(PAGE_SIZE, total_count, PAGE_SIZE):
                 page_url = base_url + f"&retstart={retstart}"
                 logger.info("PubMed search_all (retstart=%d): %s", retstart, page_url)
-                resp = self._get_response(page_url)
-                if resp.status_code != 200:
-                    logger.warning(
-                        "search_all: page retstart=%d returned %d, stopping early",
-                        retstart, resp.status_code,
+                try:
+                    resp = self._get_response(page_url)
+                    if resp.status_code != 200:
+                        logger.warning(
+                            "search_all: page retstart=%d returned %d, stopping early",
+                            retstart, resp.status_code,
+                        )
+                        break
+                    page_data = json.loads(resp.text, strict=False)
+                    batch = page_data["esearchresult"]["idlist"]
+                    all_pmids.extend(batch)
+                    logger.info(
+                        "search_all: fetched %d/%d PMIDs (retstart=%d)",
+                        len(all_pmids), total_count, retstart,
                     )
-                    break
-                page_data = json.loads(resp.text)
-                batch = page_data["esearchresult"]["idlist"]
-                all_pmids.extend(batch)
-                logger.info(
-                    "search_all: fetched %d/%d PMIDs (retstart=%d)",
-                    len(all_pmids), total_count, retstart,
-                )
+                except (json.JSONDecodeError, KeyError) as page_err:
+                    logger.warning(
+                        "search_all: page retstart=%d parse error (%s), skipping page",
+                        retstart, page_err,
+                    )
+                    continue
 
             all_pmids = list(set(all_pmids))  # deduplicate
             logger.info(
@@ -401,4 +408,4 @@ class PubmedAPIWrapper:
 
         except Exception:
             logger.error("PubMed search_all failed: %s", traceback.format_exc())
-            return [], query_url, 0
+            return all_pmids if 'all_pmids' in dir() else [], query_url, 0

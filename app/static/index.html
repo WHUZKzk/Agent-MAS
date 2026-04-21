@@ -168,17 +168,14 @@
               class="w-full border border-gray-200 rounded-lg px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-200" />
           </div>
         </div>
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="block text-xs text-gray-500 mb-1">标题标准数</label>
-            <input type="number" id="num-title" value="3" min="1" max="5"
-              class="w-full border border-gray-200 rounded-lg px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-200" />
-          </div>
-          <div>
-            <label class="block text-xs text-gray-500 mb-1">内容标准数</label>
-            <input type="number" id="num-content" value="3" min="1" max="5"
-              class="w-full border border-gray-200 rounded-lg px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-200" />
-          </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">研究设计筛选</label>
+          <select id="study-design-filter"
+            class="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200">
+            <option value="both">RCT + 观察性研究（全部）</option>
+            <option value="rct_only">仅纳入 RCT</option>
+            <option value="obs_only">仅纳入观察性研究</option>
+          </select>
         </div>
         <div>
           <label class="block text-xs text-gray-500 mb-1">最大并发请求数</label>
@@ -344,12 +341,12 @@
         </button>
         <div id="criteria-content" class="hidden px-5 pb-4 space-y-3">
           <div>
-            <div class="text-xs font-semibold text-blue-700 mb-1">标题标准（Title Criteria）</div>
-            <ol id="crit-title" class="list-decimal list-inside space-y-1 text-sm text-gray-600"></ol>
+            <div class="text-xs font-semibold text-blue-700 mb-1">PICO 维度匹配标准</div>
+            <div id="crit-title" class="space-y-2 text-sm text-gray-600"></div>
           </div>
           <div>
-            <div class="text-xs font-semibold text-green-700 mb-1">内容标准（Content Criteria）</div>
-            <ol id="crit-content" class="list-decimal list-inside space-y-1 text-sm text-gray-600"></ol>
+            <div class="text-xs font-semibold text-green-700 mb-1">研究设计标准</div>
+            <div id="crit-content" class="space-y-1 text-sm text-gray-600"></div>
           </div>
         </div>
       </div>
@@ -789,6 +786,7 @@ async function runScreen() {
   const papers = allPapers.map(p => ({
     pmid: p.pmid, title: p.title, abstract: p.abstract,
     authors: p.authors, year: p.year, journal: p.journal,
+    publication_type: p.publication_type || null,
   }));
 
   try {
@@ -798,8 +796,7 @@ async function runScreen() {
       body: JSON.stringify({
         pico: currentPico,
         papers,
-        num_title_criteria:   +document.getElementById('num-title').value,
-        num_content_criteria: +document.getElementById('num-content').value,
+        study_design_filter:  document.getElementById('study-design-filter').value,
         max_concurrency:      +document.getElementById('max-concurrency').value,
       }),
     });
@@ -843,79 +840,82 @@ async function runScreen() {
 function handleScreenEvent(event) {
   const total = allPapers.length;
 
-  if (event.type === 'criteria') {
+  if (event.type === 'stage0_done') {
+    const d = event.data;
+    document.getElementById('progress-title').textContent = 'Stage 1：PICOS 结构化提取中…';
+    document.getElementById('progress-sub').textContent =
+      `Stage 0 完成：${d.kept}/${d.total} 篇通过规则预筛选（${d.excluded} 篇排除）`;
+
+  } else if (event.type === 'stage1_done') {
+    const d = event.data;
+    document.getElementById('progress-title').textContent = 'Stage 2：生成匹配标准…';
+    document.getElementById('progress-sub').textContent =
+      `PICOS 提取完成，${d.kept} 篇进入维度匹配（${d.design_excluded} 篇被研究设计交叉验证排除）`;
+
+  } else if (event.type === 'criteria_generated') {
     const data = event.data;
-    const tc = data.title_criteria   || [];
-    const cc = data.content_criteria || [];
-    allCriteria = [...tc, ...cc];
+    // Display PICOS matching criteria
+    const dims = ['P', 'I', 'C', 'O'];
+    const dimNames = {P:'人群 Population', I:'干预 Intervention', C:'对照 Comparison', O:'结局 Outcome'};
+    const critHtml = dims.map(d => {
+      const key = d + '_criteria';
+      const c = data[key] || {};
+      return `<div class="mb-2">
+        <div class="text-xs font-semibold text-blue-700">${dimNames[d]}</div>
+        <div class="text-xs text-gray-600 ml-2">
+          <div><span class="font-semibold">核心：</span>${escHtml(c.core||'')}</div>
+          <div><span class="font-semibold">可接受变体：</span>${escHtml(c.acceptable_variations||'')}</div>
+          <div><span class="font-semibold">排除边界：</span>${escHtml(c.exclusion_boundary||'')}</div>
+        </div>
+      </div>`;
+    }).join('');
 
-    document.getElementById('crit-title').innerHTML   = tc.map(c=>`<li>${escHtml(c)}</li>`).join('');
-    document.getElementById('crit-content').innerHTML = cc.map(c=>`<li>${escHtml(c)}</li>`).join('');
+    const sCrit = data.S_criteria || {};
+    const sHtml = `<div class="mb-2">
+      <div class="text-xs font-semibold text-blue-700">研究设计 Study Design</div>
+      <div class="text-xs text-gray-600 ml-2">
+        <div><span class="font-semibold">可接受：</span>${(sCrit.acceptable_designs||[]).join(', ')}</div>
+        <div><span class="font-semibold">排除：</span>${(sCrit.excluded_designs||[]).join(', ')}</div>
+      </div>
+    </div>`;
 
-    // Expand criteria accordion
+    document.getElementById('crit-title').innerHTML = critHtml;
+    document.getElementById('crit-content').innerHTML = sHtml;
     document.getElementById('criteria-content').classList.remove('hidden');
     document.getElementById('criteria-arrow').textContent = '▲';
 
-    // Build decisions table header
+    // Build v2 decisions table header (PICOS dimensions instead of criteria columns)
     document.getElementById('decisions-header').innerHTML = `
       <th class="px-4 py-3 text-left w-20">PMID</th>
       <th class="px-4 py-3 text-left">标题</th>
       <th class="px-4 py-3 text-left w-28">决策</th>
-      ${allCriteria.map((c,i)=>`<th class="px-3 py-3 text-center w-12" title="${escHtml(c)}">C${i+1}</th>`).join('')}
+      <th class="px-3 py-3 text-center w-12" title="Population">P</th>
+      <th class="px-3 py-3 text-center w-12" title="Intervention">I</th>
+      <th class="px-3 py-3 text-center w-12" title="Comparison">C</th>
+      <th class="px-3 py-3 text-center w-12" title="Outcome">O</th>
+      <th class="px-3 py-3 text-center w-12" title="Study Design">S</th>
+      <th class="px-4 py-3 text-left w-20">阶段</th>
     `;
 
-    document.getElementById('progress-title').textContent = '第一阶段：题目筛选中…';
-    document.getElementById('progress-sub').textContent   = `共 ${total} 篇论文`;
+    document.getElementById('progress-title').textContent = 'Stage 2：维度匹配筛选中…';
+    document.getElementById('progress-sub').textContent = '正在逐篇文献进行 PICOS 维度匹配…';
 
-  } else if (event.type === 'phase1_done') {
-    const { passed } = event.data;
-    document.getElementById('progress-title').textContent = '第二阶段：摘要筛选中…';
-    document.getElementById('progress-sub').textContent =
-      `题目筛选完成，${passed}/${total} 篇进入摘要筛选`;
-
-  } else if (event.type === 'paper_done') {
+  } else if (event.type === 'paper_decided') {
     const d = event.data;
     allDecisions.push(d);
 
     document.getElementById('progress-sub').textContent =
-      `已完成 ${allDecisions.length} / ${total} 篇`;
-
-    // Append row immediately
-    const badgeCls = d.decision==='INCLUDE'  ? 'badge-include'
-                   : d.decision==='EXCLUDE'  ? 'badge-exclude' : 'badge-uncertain';
-    const badgeTxt = d.decision==='INCLUDE'  ? '✅ 纳入'
-                   : d.decision==='EXCLUDE'  ? '❌ 排除' : '❓ 不确定';
-    const evals = (d.evaluations||[]).map(e => {
-      if (e === 'SKIPPED') return `<td class="px-3 py-3 text-center"><span class="text-gray-300" title="题目阶段已排除，跳过摘要评估">—</span></td>`;
-      const cls = e==='YES' ? 'eval-yes' : e==='NO' ? 'eval-no' : 'eval-uncertain';
-      const sym = e==='YES' ? '●' : e==='NO' ? '●' : '◐';
-      return `<td class="px-3 py-3 text-center"><span class="${cls}" title="${e}">${sym}</span></td>`;
-    }).join('');
-
-    const tr = document.createElement('tr');
-    tr.className = 'table-row border-t border-gray-50';
-    tr.dataset.decision = d.decision;
-    tr.innerHTML = `
-      <td class="px-4 py-3">
-        <a href="https://pubmed.ncbi.nlm.nih.gov/${d.pmid}/" target="_blank"
-           class="text-blue-600 hover:underline font-mono text-xs">${d.pmid}</a>
-      </td>
-      <td class="px-4 py-3 text-sm text-gray-700 leading-snug">${escHtml(d.title||'')}</td>
-      <td class="px-4 py-3"><span class="tag ${badgeCls} font-semibold">${badgeTxt}</span></td>
-      ${evals}
-    `;
-    document.getElementById('decisions-tbody').appendChild(tr);
+      `已决策 ${allDecisions.length} / ${total} 篇`;
 
   } else if (event.type === 'summary') {
     const s = event.data;
     document.getElementById('sum-total').textContent     = s.total;
-    document.getElementById('sum-include').textContent   = s.included;
-    document.getElementById('sum-exclude').textContent   = s.excluded;
-    document.getElementById('sum-uncertain').textContent = s.uncertain;
+    document.getElementById('sum-include').textContent   = s.final_included;
+    document.getElementById('sum-exclude').textContent   = s.final_excluded;
+    document.getElementById('sum-uncertain').textContent = s.stage3_reviewed || '—';
 
   } else if (event.type === 'done') {
     document.getElementById('screen-progress').classList.add('hidden');
-    // Rebuild paginated view (rows already rendered; this adds pagination controls)
     filteredDecisions = [...allDecisions];
     decPage = 0;
     renderDecisionsPage();
@@ -930,9 +930,21 @@ function filterDecisions(filter, btn) {
   document.querySelectorAll('.screen-tab').forEach(b => b.classList.remove('active-tab'));
   btn.classList.add('active-tab');
   filteredDecisions = filter === 'ALL' ? [...allDecisions]
-    : allDecisions.filter(d => d.decision === filter);
+    : allDecisions.filter(d => d.final_decision === filter);
   decPage = 0;
   renderDecisionsPage();
+}
+
+function _dimBadge(val) {
+  if (val === 'MATCH')     return '<span class="eval-yes" title="MATCH">M</span>';
+  if (val === 'MISMATCH')  return '<span class="eval-no" title="MISMATCH">X</span>';
+  if (val === 'UNCERTAIN') return '<span class="eval-uncertain" title="UNCERTAIN">?</span>';
+  return '<span class="text-gray-300" title="N/A">—</span>';
+}
+
+function _stageLabel(stage) {
+  const map = {stage0:'S0', stage1:'S1', stage2:'S2', stage3:'S3'};
+  return map[stage] || stage;
 }
 
 function renderDecisionsPage() {
@@ -941,16 +953,18 @@ function renderDecisionsPage() {
 
   const tbody = document.getElementById('decisions-tbody');
   tbody.innerHTML = page.map(d => {
-    const badgeCls = d.decision==='INCLUDE' ? 'badge-include'
-                   : d.decision==='EXCLUDE' ? 'badge-exclude' : 'badge-uncertain';
-    const badgeTxt = d.decision==='INCLUDE' ? '✅ 纳入'
-                   : d.decision==='EXCLUDE' ? '❌ 排除' : '❓ 不确定';
-    const evals = (d.evaluations||[]).map(e => {
-      if (e === 'SKIPPED') return `<td class="px-3 py-3 text-center"><span class="text-gray-300" title="题目阶段已排除，跳过摘要评估">—</span></td>`;
-      const cls = e==='YES' ? 'eval-yes' : e==='NO' ? 'eval-no' : 'eval-uncertain';
-      const sym = e==='YES' ? '●' : e==='NO' ? '●' : '◐';
-      return `<td class="px-3 py-3 text-center"><span class="${cls}" title="${e}">${sym}</span></td>`;
-    }).join('');
+    const dec = d.final_decision || 'EXCLUDE';
+    const badgeCls = dec==='INCLUDE' ? 'badge-include'
+                   : dec==='EXCLUDE' ? 'badge-exclude' : 'badge-uncertain';
+    const badgeTxt = dec==='INCLUDE' ? '纳入'
+                   : dec==='EXCLUDE' ? '排除' : '不确定';
+
+    // Extract dimension results (from dimension_result if available)
+    const dims = (d.dimension_result && d.dimension_result.dimensions) || {};
+    const dimCells = ['P','I','C','O','S'].map(k =>
+      `<td class="px-3 py-3 text-center">${_dimBadge(dims[k])}</td>`
+    ).join('');
+
     return `<tr class="table-row border-t border-gray-50">
       <td class="px-4 py-3">
         <a href="https://pubmed.ncbi.nlm.nih.gov/${d.pmid}/" target="_blank"
@@ -960,7 +974,8 @@ function renderDecisionsPage() {
       <td class="px-4 py-3">
         <span class="tag ${badgeCls} font-semibold">${badgeTxt}</span>
       </td>
-      ${evals}
+      ${dimCells}
+      <td class="px-4 py-3 text-xs text-gray-400">${_stageLabel(d.decision_stage)}</td>
     </tr>`;
   }).join('');
 
@@ -1029,15 +1044,21 @@ function resetAll() {
 // ─────────────────────────────────────────────────
 function exportCSV() {
   if (!allDecisions.length) return;
-  const cols = ['PMID','Title','Decision',
-    ...allCriteria.map((_,i)=>`C${i+1}`)];
-  const rows = allDecisions.map(d =>
-    [d.pmid, `"${(d.title||'').replace(/"/g,'""')}"`, d.decision, ...(d.evaluations||[])].join(',')
-  );
+  const cols = ['PMID','Title','Final_Decision','Decision_Stage','P','I','C','O','S'];
+  const rows = allDecisions.map(d => {
+    const dims = (d.dimension_result && d.dimension_result.dimensions) || {};
+    return [
+      d.pmid,
+      `"${(d.title||'').replace(/"/g,'""')}"`,
+      d.final_decision,
+      d.decision_stage,
+      dims.P||'', dims.I||'', dims.C||'', dims.O||'', dims.S||'',
+    ].join(',');
+  });
   const csv = [cols.join(','), ...rows].join('\n');
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
-  a.download = 'autosr_screening_results.csv';
+  a.download = 'autosr_screening_v2_results.csv';
   a.click();
 }
 
@@ -1260,6 +1281,14 @@ function handleExtractEvent(event) {
   } else if (event.type === 'parsing_done') {
     progTitle.textContent = '正在分块和语义检索…';
     progSub.textContent = `${event.data.parsed}/${event.data.total} 个文件解析成功`;
+
+  } else if (event.type === 'ocr_fallback') {
+    const d = event.data || {};
+    const count = d.count || 0;
+    const files = (d.files || []).slice(0, 3).join(', ');
+    const suffix = (d.files || []).length > 3 ? ' ...' : '';
+    progTitle.textContent = '正在分块和语义检索…';
+    progSub.textContent = `⚠ OCR fallback used (${count} files): ${files}${suffix}`;
 
   } else if (event.type === 'chunking_done') {
     progTitle.textContent = '正在提取数据…';
